@@ -72,7 +72,7 @@
     flex: 1;                                      
     display: flex;                                
     flex-direction: column;                       
-    padding: 18px 28px 30px 28px;                 /* 👈 調整：微調頂部內距，讓中線與下半部標題拉開優雅距離 */
+    padding: 18px 28px 30px 28px;                 
     white-space: nowrap;                          
 }
 
@@ -114,7 +114,7 @@
 /* 🌟 核心優化：列表文字行高、間距微調 */
 .app-list-item { 
     font-size: 1.05rem;                           
-    margin-bottom: 8px;                           /* 稍微拉開行距，提升閱讀舒適度 */
+    margin-bottom: 8px;                           
     color: var(--text-dark);                      
     display: flex;
     align-items: center;
@@ -133,16 +133,15 @@
     font-size: 2.6rem;                            
 }
 
-/* 🌟 核心優化 1：重新雕琢綠色泡泡標籤的黃金內距與呼吸感 */
 .k1-card .growth-tag {
     color: #10B981;                               
     background: #ECFDF5;                          
-    padding: 5px 12px !important;                 /* 調整：微調更舒展的黃金包裹內距 */
+    padding: 5px 12px !important;                 
     border-radius: 20px;                          
-    font-size: 1rem !important;                 /* 調整：字級略微縮小，視覺更精緻 */
+    font-size: 1rem !important;                 
     font-weight: 700;                             
     width: fit-content;                           
-    margin-top: 10px !important;                  /* 調整：與上方大數字拉開更乾淨的間距 */
+    margin-top: 10px !important;                  
 }
 
 /* ==========================================
@@ -228,7 +227,6 @@
 .k4-card .divider-line-center { background-color: var(--app-pink) !important; }
 .k4-card .expire-list-container { width: 100% !important; display: block !important; }
 
-/* 每一列到期警告方框的初始狀態 */
 .k4-card .expire-row {
     background: #FFF5F8 !important;               
     border-radius: 12px !important;              
@@ -239,13 +237,10 @@
     margin-bottom: 8px !important;               
     width: 100% !important;                      
     box-sizing: border-box !important;
-    
-    /* 👈 調整 1：初始狀態不播放動畫，但設定陰影平滑過渡 */
     box-shadow: 0 0 0 0 rgba(255, 94, 153, 0);
     transition: box-shadow 0.3s ease !important; 
 }
 
-/* 🌟 調整 2：關鍵魔術！當滑鼠移入 K4 卡片時，底下的到期方框才同步啟動緊湊呼吸燈 */
 .k4-card:hover .expire-row {
     animation: warningPulse 1.6s infinite ease-in-out;
 }
