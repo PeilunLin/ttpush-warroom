@@ -31,32 +31,32 @@
     --text-gray: #9CA3AF; 
 }
 
-/* 🎯 固定標題樣式：鎖定在綠色膠囊上方，空出左上角抽拉選單按鈕空間 */
+/* 🎯 固定標題樣式：鎖定在頁面頂端，空出左上角三條線(☰)抽拉選單按鈕空間 */
 .fixed-title {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     background-color: #FFFFFF !important;
-    z-index: 999; /* 降至 999，確保不會蓋過左側抽拉式選單的按鈕與側邊欄 */
+    z-index: 999; /* 降至 999，確保不會擋到左側拉式選單的按鈕與側邊欄 */
     
-    /* 🎯 完美還原：字體大小、黑色粗體 */
+    /* 🎯 完美還原原生 st.title：大尺寸字體、高級質感深黑、極粗體 */
     font-size: 2.5rem !important; 
     font-weight: 700 !important;
     color: #1F2937 !important;
     letter-spacing: -0.015em;
     
-    /* 內距精密調校：padding-left 設為 80px，不擋住左上角側邊欄三條線按鈕 */
+    /* 內距精密調校：padding-left 設為 80px，留出空間給左上角拉式選單按鈕 */
     padding: 30px 30px 10px 80px !important; 
     border-bottom: none;
 }
 
-/* 🎯 內容區塊整體下移量精密校正，確保卡片跟膠囊不會跟固定標題重疊 */
+/* 🎯 內容區塊整體下移量精密校正，確保大標題與卡片、膠囊擁有完美的呼吸間距 */
 .main .block-container {
     padding-top: 8.5rem !important;
 }
 
-/* 🎯 【核心 Bug 修復】：強制隱藏 Streamlit 預設在左上角渲染出來的頁面標題殘影 */
+/* 🎯 【核心 Bug 修復】：強制隱藏 Streamlit 預設在左上角渲染出來的重複細字殘影 */
 header[data-testid="stHeader"] {
     background: transparent !important;
 }
@@ -176,7 +176,7 @@ header[data-testid="stHeader"] {
 
 /* ==========================================
    🧩 K2 卡片專屬控制區區塊 (金幣與店家)
-   ========================================== */
+   ========================================= */
 .k2-card { border-top: 6px solid var(--app-blue); }
 .k2-card .card-section-bottom { justify-content: center !important; }
 .k2-card .divider-line-center { background-color: var(--app-blue) !important; }
