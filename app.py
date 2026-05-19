@@ -20,7 +20,7 @@ total_coins = 345069122          # 臺東金幣總發放數 (底層累積值)
 # ==========================================
 # 2. 頁面配置與 CSS 注入
 # ==========================================
-st.markdown('<div class="fixed-title">TTPush週營業資料統計分析</div>', unsafe_allow_html=True)
+st.set_page_config(page_title="TTPush 營運分析系統", layout="wide")
 
 def load_css():
     try:
@@ -32,7 +32,7 @@ def load_css():
 load_css()
 
 # ==========================================
-# 🎛️ 3. 左側選單欄位設定 (Sidebar - 完美空檔保留)
+# 🎛️ 3. 左側選單欄位設定 (Sidebar - 完美復原)
 # ==========================================
 with st.sidebar:
     st.markdown("### ⚙️ 戰情室控制台")
@@ -41,14 +41,15 @@ with st.sidebar:
 # ==========================================
 # 🏹 4. 主頁面標題與【現代輕量無邊框版】動態統計區間列
 # ==========================================
-st.title(" TTPush 週營運數據統計分析")
+# 🎯 100% 純淨黑色粗體固定頂端標題 (無符號，大小參照原版)
+st.markdown('<div class="fixed-title">TTPush週營業資料統計分析</div>', unsafe_allow_html=True)
 
 # 🌟 初始化全域日期狀態
 if 'date_range' not in st.session_state:
     today = datetime.date.today()
     st.session_state.date_range = (today.replace(day=1), today)
 
-# 🛠️ 【Bug 完美修復區】：將原本誤寫的 date_range 校正為 st.session_state.date_range
+# 🛠️ 將原本誤寫的 date_range 校正為 st.session_state.date_range
 if isinstance(st.session_state.date_range, tuple) and len(st.session_state.date_range) == 2:
     start_date_str = st.session_state.date_range[0].strftime("%Y/%m/%d")
     end_date_str = st.session_state.date_range[1].strftime("%Y/%m/%d")
@@ -269,7 +270,7 @@ with k4:
                 <li><span class="note-tag">封測</span> 114/06/23-27 進行 4.0 核心封測</li>
                 <li><span class="note-tag">推播</span> 113/09/25-11/06 曾暫停金幣推播</li>
                 <li><span class="note-tag">對象</span> 推播含所有用戶及縣民群組</li>
-                <li><span class="note-tag">維護</span> 金幣統計自 110/01/01 起算</li>
+                <li><span class="note-tag">基準</span> 金幣統計自 110/01/01 起算</li>
             </ul>
         </div>
     </div>
