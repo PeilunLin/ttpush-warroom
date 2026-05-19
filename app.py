@@ -20,7 +20,7 @@ total_coins = 345069122          # 臺東金幣總發放數 (底層累積值)
 # ==========================================
 # 2. 頁面配置與 CSS 注入
 # ==========================================
-st.set_page_config(page_title="TTPush 營運分析系統", layout="wide")
+st.markdown('<div class="fixed-title">TTPush週營業資料統計分析</div>', unsafe_allow_html=True)
 
 def load_css():
     try:
