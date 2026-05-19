@@ -1,0 +1,247 @@
+/* ==========================================================================
+   🎨 TTPush Dashboard 頂級視覺樣式表 (工程師對接版)
+   ========================================================================== */
+
+/* 1. 基礎卡片骨架定義 (落實統一的四等分張力) */
+.unified-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.015) !important;
+    min-height: 385px !important;
+    max-height: 385px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-sizing: border-box !important;
+}
+
+/* 全域卡片滑鼠懸停 (Hover) 的輕微磁浮起效果 */
+.unified-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 2. 卡片內部區塊與文字排版 */
+.card-section-top {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+}
+
+.card-section-bottom {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+}
+
+.card-label {
+    font-size: 0.92rem !important;
+    color: #6B7280 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px !important;
+    margin-bottom: 12px !important;
+    display: block !important;
+}
+
+/* 3. 核心數據大字重 (Hero Values) 比例優化 */
+.hero-val-wrapper {
+    display: flex !important;
+    align-items: baseline !important;
+    margin-top: 4px !important;
+    margin-bottom: 12px !important;
+}
+
+.hero-value {
+    font-size: 2.1rem !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+    letter-spacing: -0.5px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.long-value {
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+    letter-spacing: -0.3px !important;
+}
+
+.unit {
+    font-size: 0.9rem !important;
+    color: #9CA3AF !important;
+    font-weight: 600 !important;
+    margin-left: 6px !important;
+}
+
+/* 4. 分隔線 (與白底融為一體，維持中軸呼吸感) */
+.divider-line-center {
+    height: 1px !important;
+    background: linear-gradient(to right, rgba(0,0,0,0.01), rgba(0,0,0,0.05) 20%, rgba(0,0,0,0.05) 80%, rgba(0,0,0,0.01)) !important;
+    margin: 18px 0 !important;
+    width: 100% !important;
+}
+
+/* 5. 通用列表條目樣式 */
+.app-list-item {
+    font-size: 0.98rem !important;
+    color: #374151 !important;
+    padding: 5px 0 !important;
+    font-weight: 500 !important;
+}
+
+.data-bold {
+    font-weight: 700 !important;
+    color: #111827 !important;
+}
+
+/* 6. K1 專屬：新增會員成長標籤 */
+.growth-tag {
+    background: #E6F4EA !important;
+    color: #137333 !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    display: inline-block !important;
+    margin-top: 2px !important;
+}
+
+/* 7. K2 & K3 專屬：底部備註文字 */
+.section-note-bottom {
+    font-size: 0.85rem !important;
+    color: #9CA3AF !important;
+    margin-top: 6px !important;
+}
+
+.section-note-top-k3 {
+    font-size: 0.85rem !important;
+    color: #9CA3AF !important;
+    margin-top: -4px !important;
+    margin-bottom: 8px !important;
+}
+
+/* 8. K3 專屬：歷年預算雙欄細緻雙色網格 (完全剃除重複碼) */
+.budget-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-top: 4px !important;
+}
+
+.budget-item {
+    background: #F9FAFB !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(0,0,0,0.02) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transition: background 0.2s ease !important;
+}
+
+.budget-item:hover {
+    background: #F3F4F6 !important;
+}
+
+.b-year {
+    font-size: 0.78rem !important;
+    color: #6B7280 !important;
+    font-weight: 500 !important;
+}
+
+.budget-item .val {
+    font-size: 1.02rem !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    margin-top: 2px !important;
+}
+
+.b-unit {
+    font-size: 0.72rem !important;
+    color: #9CA3AF !important;
+    margin-left: 2px !important;
+    font-weight: 500 !important;
+}
+
+/* 9. K4 專屬：金幣到期預警清單與進階呼吸燈 */
+.expire-list-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+}
+
+.expire-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 6px 0 !important;
+}
+
+.expire-date {
+    font-size: 0.95rem !important;
+    color: #374151 !important;
+    font-weight: 600 !important;
+}
+
+.expire-val-wrapper {
+    display: flex !important;
+    align-items: baseline !important;
+}
+
+.expire-number {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #DC2626 !important; /* 警示紅 */
+}
+
+.expire-unit {
+    font-size: 0.75rem !important;
+    color: #9CA3AF !important;
+    margin-left: 3px !important;
+    font-weight: 600 !important;
+}
+
+/* 🔔 K4 卡片滑鼠移入時觸發的「1.6秒金幣到期強烈預警脈衝燈」 */
+.k4-card:hover {
+    border-color: rgba(220, 38, 38, 0.25) !important;
+    box-shadow: 0 12px 30px rgba(220, 38, 38, 0.06) !important;
+    animation: alert-pulse 1.6s infinite ease-in-out !important;
+}
+
+@keyframes alert-pulse {
+    0% { background-color: #ffffff; }
+    50% { background-color: rgba(254, 242, 242, 0.6); } /* 柔和警示粉紅淡出 */
+    100% { background-color: #ffffff; }
+}
+
+/* 10. K4 專屬：營運備註縮排清單 */
+.ops-notes {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 4px 0 0 0 !important;
+}
+
+.ops-notes li {
+    font-size: 0.86rem !important;
+    color: #4B5563 !important;
+    margin-bottom: 6px !important;
+    line-height: 1.4 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.note-tag {
+    background: #F3F4F6 !important;
+    color: #4B5563 !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    margin-right: 8px !important;
+    white-space: nowrap !important;
+}
