@@ -1,303 +1,133 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
 
-/* ==========================================
-   ✨ 全域動態效果宣告 (動畫劇本定義)
-   ========================================== */
 @keyframes slideUpFade {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes warningPulse {
     0% { box-shadow: 0 0 0 0 rgba(255, 94, 153, 0.6); }
     50% { box-shadow: 0 0 0 14px rgba(255, 94, 153, 0); }
     100% { box-shadow: 0 0 0 0 rgba(255, 94, 153, 0); }
 }
 
-
-/* ==========================================
-   0. 全域與通用基礎設定 (高級細節美化版)
-   ========================================== */
 :root {
     --app-pink: #FF5E99;  
     --app-blue: #007AFF;  
-    --text-dark: #1F2937; 
-    --text-gray: #9CA3AF; 
+    --text-dark: #1E293B; 
+    --text-gray: #475569; 
 }
 
-/* 🎯 固定標題樣式：鎖定在頁面頂端，空出左上角三條線(☰)抽拉選單按鈕空間 */
 .fixed-title {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background-color: #FFFFFF !important;
-    z-index: 999; /* 降至 999，確保不會擋到左側拉式選單的按鈕與側邊欄 */
-    
-    /* 🎯 完美還原原生 st.title：大尺寸字體、高級質感深黑、極粗體 */
-    font-size: 2.5rem !important; 
-    font-weight: 700 !important;
-    color: #1F2937 !important;
-    letter-spacing: -0.015em;
-    
-    /* 內距精密調校：padding-left 設為 80px，留出空間給左上角拉式選單按鈕 */
-    padding: 30px 30px 10px 80px !important; 
-    border-bottom: none;
+    position: fixed; top: 0; left: 0; right: 0; background-color: #FFFFFF !important; z-index: 999;
+    font-size: 2.5rem !important; font-weight: 700 !important; color: #1F2937 !important; letter-spacing: -0.015em;
+    padding: 30px 30px 10px 80px !important; border-bottom: none;
+}
+.main .block-container { padding-top: 8.5rem !important; }
+header[data-testid="stHeader"] { background: transparent !important; }
+
+.capsule-visual-container {
+    position: relative;
+    width: 380px;
+    height: 42px;
+    margin-top: 14px;
+    margin-bottom: -42px; 
+    z-index: 5;
 }
 
-/* 🎯 內容區塊整體下移量精密校正，確保大標題與卡片、膠囊擁有完美的呼吸間距 */
-.main .block-container {
-    padding-top: 8.5rem !important;
+.morandi-static-capsule {
+    background-color: #E2ECE9;
+    border: 1px solid rgba(4, 120, 87, 0.12);
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    width: 380px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1E293B; 
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    font-size: 1.02rem;
+    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+    pointer-events: none;
 }
 
-/* 🎯 【核心 Bug 修復】：強制隱藏 Streamlit 預設在左上角渲染出來的重複細字殘影 */
-header[data-testid="stHeader"] {
-    background: transparent !important;
+div[data-testid="stSelectbox"] {
+    position: relative !important;
+    width: 380px !important;
+    max-width: 380px !important;
+    height: 42px !important;
+    margin-top: 0 !important;
+    margin-bottom: 28px !important;
+    z-index: 10 !important;
+    opacity: 0; 
+}
+
+.capsule-visual-container:hover .morandi-static-capsule {
+    background-color: #C2D5D0;
+    border-color: rgba(4, 120, 87, 0.25);
 }
 
 .unified-card {
-    background-color: #ffffff;                    
-    border-radius: 24px;                          
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.015);   
-    height: 460px !important;                     
-    display: flex;                                
-    flex-direction: column;                       
-    font-family: 'Inter', 'Noto Sans TC', sans-serif; 
-    border: 1px solid rgba(0, 0, 0, 0.02);         
-    overflow: hidden;                             
-    
-    /* 設定全卡片平滑過渡動畫 */
-    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
-                box-shadow 0.35s cubic-bezier(0.25, 1, 0.5, 1),
-                border-color 0.35s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    background-color: #ffffff; border-radius: 24px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.015);   
+    height: 460px !important; display: flex; flex-direction: column; font-family: 'Inter', 'Noto Sans TC', sans-serif; 
+    border: 1px solid rgba(0, 0, 0, 0.02); overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.35s cubic-bezier(0.25, 1, 0.5, 1) !important;
 }
+.unified-card:hover { transform: translateY(-5px) !important; box-shadow: 0 20px 38px rgba(0, 0, 0, 0.055) !important; border-color: rgba(0, 122, 255, 0.15) !important; }
 
-/* 滑鼠懸浮時的微互動（氣墊浮起感） */
-.unified-card:hover {
-    transform: translateY(-5px) !important; 
-    box-shadow: 0 20px 38px rgba(0, 0, 0, 0.055) !important; 
-    border-color: rgba(0, 122, 255, 0.15) !important; 
-}
+.card-section-top { flex: 1; display: flex; flex-direction: column; justify-content: flex-start !important; padding: 30px 28px 10px 28px; white-space: nowrap; }
+.card-section-bottom { flex: 1; display: flex; flex-direction: column; padding: 18px 28px 30px 28px; white-space: nowrap; }
+.divider-line-center { display: block !important; height: 1.5px !important; width: 88% !important; margin: 0 auto !important; flex-shrink: 0; }
 
-.k4-card:hover {
-    border-color: rgba(255, 94, 153, 0.2) !important;
-}
-
-.card-section-top {
-    flex: 1;                                      
-    display: flex;                                
-    flex-direction: column;                       
-    justify-content: flex-start !important;       
-    padding: 30px 28px 10px 28px;                 
-    white-space: nowrap;                          
-}
-
-.card-section-bottom {
-    flex: 1;                                      
-    display: flex;                                
-    flex-direction: column;                       
-    padding: 18px 28px 30px 28px;                 
-    white-space: nowrap;                          
-}
-
-.divider-line-center {
-    display: block !important;                     
-    height: 1.5px !important;                     
-    width: 88% !important;                        
-    margin: 0 auto !important;                    
-    flex-shrink: 0;                               
-}
-
-/* 統一上下標題 */
-.card-section-top .card-label,
-.card-section-bottom .card-label { 
-    font-weight: 700 !important;                             
-    margin-bottom: 12px !important;               
-    display: block;                               
-}
+.card-section-top .card-label, .card-section-bottom .card-label { font-weight: 700 !important; margin-bottom: 12px !important; display: block; }
 .card-section-top .card-label { color: #007AFF !important; font-size: 1.5rem !important; }
 .card-section-bottom .card-label { color: #007AFF !important; font-size: 1.25rem !important; }
 
-/* 賦予所有主視覺大數字開場淡入效果 */
-.hero-value, .long-value, .expire-number {
-    animation: slideUpFade 0.6s cubic-bezier(0.25, 1, 0.5, 1) both;
-}
+.hero-value, .long-value, .expire-number { animation: slideUpFade 0.6s cubic-bezier(0.25, 1, 0.5, 1) both; }
+.hero-val-wrapper { display: flex; align-items: baseline; gap: 4px; }
+.hero-value { color: var(--text-dark); font-weight: 900 !important; letter-spacing: -1px; font-size: 2.6rem; }
 
-.hero-val-wrapper { 
-    display: flex;                                
-    align-items: baseline;                        
-    gap: 4px;                                     
-}
+.k2-card .long-value { color: var(--text-dark); font-weight: 900 !important; font-size: 1.75rem !important; letter-spacing: -0.5px !important; line-height: 1.2 !important; display: inline-block; margin-top: 8px; margin-bottom: 8px; }
+.k3-card .hero-value { color: var(--text-dark); font-weight: 900 !important; font-size: 1.75rem !important; letter-spacing: -0.5px !important; line-height: 1.2 !important; display: inline-block; }
+.k4-card .expire-number { font-weight: 900 !important; font-size: 1.05rem !important; color: #9E1A4B !important; letter-spacing: -0.3px !important; }
 
-.unit { 
-    color: var(--text-gray);                      
-    font-size: 1rem;                              
-    margin-left: 4px !important;
-}
+.unit { color: var(--text-gray); font-size: 1rem; margin-left: 4px !important; }
+.app-list-item { font-size: 1.05rem; margin-bottom: 8px; color: var(--text-dark); display: flex; align-items: center; }
+.data-bold { font-weight: bold; margin-left: 3px; margin-right: 3px; }
 
-/* 🌟 核心優化：列表文字行高、間距微調 */
-.app-list-item { 
-    font-size: 1.05rem;                           
-    margin-bottom: 8px;                           
-    color: var(--text-dark);                      
-    display: flex;
-    align-items: center;
-}
-
-/* ==========================================
-   🧩 K1 卡片專屬控制區區塊 (會員與推播)
-   ========================================== */
 .k1-card { border-top: 6px solid var(--app-blue); }
 .k1-card .card-section-bottom { justify-content: center !important; }
 .k1-card .divider-line-center { background-color: var(--app-blue) !important; }
-.k1-card .hero-value { 
-    color: var(--text-dark);                      
-    font-weight: 900 !important;                  
-    letter-spacing: -1px;                         
-    font-size: 2.6rem;                            
-}
+.k1-card .growth-tag { color: #10B981; background: #ECFDF5; padding: 6px 14px !important; border-radius: 20px; font-size: 0.95rem !important; font-weight: 700; width: fit-content; margin-top: 10px !important; }
 
-.k1-card .growth-tag {
-    color: #10B981;                               
-    background: #ECFDF5;                          
-    padding: 5px 12px !important;                 
-    border-radius: 20px;                          
-    font-size: 1rem !important;                 
-    font-weight: 700;                             
-    width: fit-content;                           
-    margin-top: 10px !important;                  
-}
-
-/* ==========================================
-   🧩 K2 卡片專屬控制區區塊 (金幣與店家)
-   ========================================= */
 .k2-card { border-top: 6px solid var(--app-blue); }
 .k2-card .card-section-bottom { justify-content: center !important; }
 .k2-card .divider-line-center { background-color: var(--app-blue) !important; }
-.k2-card .long-value { 
-    color: var(--text-dark); 
-    font-weight: 900 !important; 
-    font-size: 2.1rem; 
-    margin-top: 8px;              
-    margin-bottom: 8px;           
-    letter-spacing: 1.5px !important; 
-}
-.k2-card .section-note-bottom {
-    font-size: 0.8rem;             
-    color: var(--text-gray);       
-    margin-top: 2px;               
-    display: block;                
-}
+.k2-card .section-note-bottom { font-size: 0.8rem; color: var(--text-gray); margin-top: 2px; display: block; }
 
-/* ==========================================
-   🧩 K3 卡片專屬控制區區塊 (歷年預算)
-   ========================================== */
 .k3-card { border-top: 6px solid var(--app-blue); }
 .k3-card .divider-line-center { background-color: var(--app-blue) !important; }
-.k3-card .hero-value {
-    color: var(--text-dark); 
-    font-weight: 900 !important; 
-    font-size: 1.85rem;
-    letter-spacing: 1px !important;              
-}
-.k3-card .section-note-top-k3 {
-    font-size: 0.8rem;                            
-    color: var(--text-gray);                      
-    margin-top: 6px;                              
-    display: block;
-}
+.k3-card .section-note-top-k3 { font-size: 0.8rem; color: var(--text-gray); margin-top: 6px; display: block; }
 .k3-card .card-section-bottom { justify-content: flex-start !important; padding-top: 20px !important; }
 .k3-card .budget-grid { width: 100%; }
-.k3-card .budget-item { 
-    display: flex;                                
-    width: 100%;
-    padding: 6px 0;                               
-    border-bottom: 1px solid #F9FAFB;             
-    font-size: 0.9rem;                            
-    box-sizing: border-box;
-    transition: background-color 0.2s ease; 
-}
-.k3-card .budget-item:hover {
-    background-color: #F9FAFB !important;
-}
-.k3-card .budget-item .b-year {
-    width: 45% !important;                        
-    flex-shrink: 0;                               
-    color: var(--text-dark);
-    text-align: left;
-}
-.k3-card .budget-item .val {
-    width: 43% !important;                        
-    text-align: right !important;                 
-    font-weight: 800 !important;                  
-    color: var(--text-dark);
-    padding-right: 0 !important;                  
-}
-.k3-card .budget-item .b-unit {
-    width: 12% !important;                        
-    flex-shrink: 0;
-    color: var(--text-gray) !important;           
-    font-weight: 400 !important;                  
-    text-align: right;                            
-}
+.k3-card .budget-item { display: flex; width: 100%; padding: 6px 0; border-bottom: 1px solid #F9FAFB; font-size: 0.9rem; box-sizing: border-box; }
+.k3-card .budget-item:hover { background-color: #F9FAFB !important; }
+.k3-card .budget-item .b-year { width: 45% !important; flex-shrink: 0; color: var(--text-dark); text-align: left; }
+.k3-card .budget-item .val { width: 43% !important; text-align: right !important; font-weight: 800 !important; color: var(--text-dark); }
+.k3-card .budget-item .b-unit { width: 12% !important; flex-shrink: 0; color: var(--text-gray) !important; font-weight: 400 !important; text-align: right; }
 
-/* ==========================================
-   🧩 K4 卡片專屬控制區區塊 (到期與備註)
-   ========================================== */
 .k4-card { border-top: 6px solid var(--app-pink); }
-.k4-card .card-section-top .card-label,
-.k4-card .card-section-bottom .card-label { color: #FF5E99 !important; } 
-.k4-card .card-section-bottom { justify-content: flex-start !important; padding-top: 20px !important; }
+.k4-card:hover { border-color: rgba(255, 94, 153, 0.2) !important; }
+.k4-card .card-section-top .card-label { color: #FF5E99 !important; font-size: 1.5rem !important; }
+.k4-card .card-section-bottom .card-label { color: #FF5E99 !important; font-size: 1.25rem !important; }
 .k4-card .divider-line-center { background-color: var(--app-pink) !important; }
 .k4-card .expire-list-container { width: 100% !important; display: block !important; }
-
-.k4-card .expire-row {
-    background: #FFF5F8 !important;               
-    border-radius: 12px !important;              
-    padding: 10px 14px !important;               
-    display: flex !important;                    
-    justify-content: space-between !important;   
-    align-items: center !important;              
-    margin-bottom: 8px !important;               
-    width: 100% !important;                      
-    box-sizing: border-box !important;
-    box-shadow: 0 0 0 0 rgba(255, 94, 153, 0);
-    transition: box-shadow 0.3s ease !important; 
-}
-
-.k4-card:hover .expire-row {
-    animation: warningPulse 1.6s infinite ease-in-out;
-}
-
+.k4-card .expire-row { background: #FFF5F8 !important; border-radius: 12px !important; padding: 10px 14px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 8px !important; width: 100% !important; box-sizing: border-box !important; }
+.k4-card:hover .expire-row { animation: warningPulse 1.6s infinite ease-in-out; }
 .k4-card .expire-date { color: var(--app-pink) !important; font-weight: 700 !important; font-size: 0.85rem !important; }
-.k4-card .expire-val-wrapper { display: flex !important; align-items: baseline !important; }
-.k4-card .expire-number { font-weight: 900 !important; font-size: 1.15rem !important; color: #9E1A4B !important; letter-spacing: 0.5px !important; }
-.k4-card .expire-unit { font-size: 0.85rem !important; color: #A38F96 !important; font-weight: 500 !important; margin-left: 6px !important; }
-
-.k4-card .ops-notes { padding-left: 0 !important; margin: 0 !important; list-style-type: none !important; list-style: none !important; }
-.k4-card .ops-notes li { 
-    font-size: 0.82rem !important;                
-    color: var(--text-dark) !important;           
-    margin-bottom: 8px !important;                
-    display: flex !important;                     
-    align-items: center !important;               
-    line-height: 1.4 !important;                  
-    white-space: nowrap !important;                          
-}
-.k4-card .ops-notes .note-tag {
-    background: #FFF5F8 !important;               
-    color: #FF5E99 !important;                    
-    font-size: 0.75rem !important;                
-    font-weight: 700 !important;                  
-    padding: 2px 6px !important;                  
-    border-radius: 6px !important;                
-    margin-right: 8px !important;                 
-    flex-shrink: 0 !important;                   
-    border: 1px solid rgba(255, 94, 153, 0.15) !important;   
-}
+.k4-card .expire-unit { font-size: 0.85rem !important; color: #A38F96 !important; margin-left: 6px !important; }
+.k4-card .ops-notes { padding-left: 0 !important; margin: 0 !important; list-style-type: none !important; }
+.k4-card .ops-notes li { font-size: 0.82rem !important; color: var(--text-dark) !important; margin-bottom: 8px !important; display: flex !important; align-items: center !important; line-height: 1.4 !important; white-space: nowrap !important; }
+.k4-card .ops-notes .note-tag { background: #FFF5F8 !important; color: #FF5E99 !important; font-size: 0.75rem !important; font-weight: 700 !important; padding: 2px 6px !important; border-radius: 6px !important; margin-right: 8px !important; flex-shrink: 0 !important; border: 1px solid rgba(255, 94, 153, 0.15) !important; }
