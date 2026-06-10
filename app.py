@@ -44,7 +44,7 @@ def on_sidebar_change():
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據自動化清洗引擎 v9.6")
+    st.caption("台東金幣大數據自動化清洗引擎 v9.8")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -56,10 +56,19 @@ with st.sidebar:
     st.markdown("---")
     
     if nav_tab == "👀 戰情首頁":
+        st.markdown("#### 📅 歷史週報快速檢視")
+        st.selectbox(
+            "請選擇欲調閱的營業週間：",
+            options=historical_periods_list,
+            index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0,
+            key="capsule_native_key",
+            on_change=on_sidebar_change,
+            label_visibility="collapsed"
+        )
         st.info(f"💡 目前戰情室正定錨在：\n`{st.session_state.selected_period}`")
+        
         st.markdown("---")
         st.markdown("#### 📥 歷史數據匯出")
-        
         export_records = []
         for period, data in DATA_ENGINE.items():
             row = {"統計區間": period}
@@ -232,14 +241,14 @@ with st.sidebar:
         st.title("📞 客服陳情追蹤看板")
         st.info("此區塊已成功獨立。未來將導入 Trello 般的 Kanban 看板，讓第一線話務人員在此快速建檔追蹤異常案件！")
 
+
 # ==========================================
-# 4. 📺 主畫面渲染
+# 4. 📺 主畫面渲染 (完美繼承舊版設計)
 # ==========================================
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # 🌟 修復關鍵：將膠囊與透明下拉選單「放回主畫面中心」，排版瞬間恢復正常！
     st.markdown(f"""
     <div class="capsule-visual-container">
         <div class="morandi-static-capsule">
@@ -248,110 +257,143 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     </div>
     """, unsafe_allow_html=True)
 
-    st.selectbox(
-        "請選擇欲調閱的營業週間：",
-        options=historical_periods_list,
-        index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0,
-        key="capsule_native_key",
-        on_change=on_sidebar_change,
-        label_visibility="collapsed"
-    )
-
+    # 提取當前區間數據
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
-    k1 = current_data.get("k1_metrics", {})
-    k2 = current_data.get("k2_metrics", {})
-    k4 = current_data.get("k4_metrics", {})
+    k1_d = current_data.get("k1_metrics", {})
+    k2_d = current_data.get("k2_metrics", {})
+    k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "78,941,000"})
+    k4_d = current_data.get("k4_metrics", {})
 
-    col1, col2, col3, col4 = st.columns(4)
+    # ==========================================
+    # 變數抽取區 (完全還原)
+    # ==========================================
+    t_users_str = f"{int(k1_d.get('actual_total_users', 0)):,}"
+    w_users_str = f"{int(k1_d.get('derived_weekly_new_users', 0)):,}"
+    t_push_str = f"{int(k1_d.get('total_push_accumulated', 0)):,}"
+    w_push_str = f"{int(k1_d.get('weekly_push_current', 0)):,}"
 
-    with col1:
-        st.markdown(f"""
-        <div class="unified-card k1-card">
-            <div class="card-section-top">
-                <span class="card-label">累積會員總數</span>
-                <div class="hero-val-wrapper">
-                    <span class="hero-value">{int(k1.get('actual_total_users', 0)):,}</span><span class="unit">人</span>
-                </div>
-                <div class="growth-tag">⬆ 本週新增 {int(k1.get('derived_weekly_new_users', 0)):,} 人</div>
-            </div>
-            <div class="divider-line-center"></div>
-            <div class="card-section-bottom">
-                <span class="card-label">臺東金幣總發放數</span>
-                <div class="hero-val-wrapper">
-                    <span class="hero-value" style="font-size: 1.8rem;">{int(k2.get('total_accumulated_coins', 0)):,}</span><span class="unit">枚</span>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    w_issued_str = f"{int(k2_d.get('weekly_coins_issued', 0)):,}"
+    w_redeemed_str = f"{int(k2_d.get('weekly_coins_redeemed_audited', 0)):,}"
+    t_coins_str = f"{int(k2_d.get('total_accumulated_coins', 0)):,}"
+    active_stores_str = f"{int(k2_d.get('active_stores_count', 0)):,}"
+    new_stores_str = f"{int(k2_d.get('new_stores_adjusted', 0)):,}"
+    total_stores_str = f"{int(k2_d.get('total_stores_accumulated', 679)):,}"
 
-    with col2:
-        st.markdown(f"""
-        <div class="unified-card k2-card">
-            <div class="card-section-top">
-                <span class="card-label">當週營運指標</span>
-                <div class="app-list-item">🔹當週發放 <span class="data-bold">{int(k2.get('weekly_coins_issued', 0)):,}</span> 枚</div>
-                <div class="app-list-item">🔹當週兌換 <span class="data-bold">{int(k2.get('weekly_coins_redeemed_audited', 0)):,}</span> 枚</div>
-                <div class="app-list-item">🔹消費店家 <span class="data-bold">{int(k2.get('active_stores_count', 0)):,}</span> 家 / 新增 <span class="data-bold">{int(k2.get('new_stores_adjusted', 0)):,}</span> 家</div>
-                <div class="app-list-item">🔹總特約店 <span class="data-bold">{int(k2.get('total_stores_accumulated', 0)):,}</span> 家</div>
-            </div>
-            <div class="divider-line-center"></div>
-            <div class="card-section-bottom">
-                <span class="card-label">累計推播總數</span>
-                <div class="hero-val-wrapper">
-                    <span class="long-value">{int(k1.get('total_push_accumulated', 0)):,}</span><span class="unit">則</span>
-                </div>
-                <span class="section-note-bottom">(本週推播 {int(k1.get('weekly_push_current', 0))} 則)</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    b110_val = k3_d.get('b110','176,839,060')
+    b111_val = k3_d.get('b111','67,113,280')
+    b112_val = k3_d.get('b112','66,302,010')
+    b113_val = k3_d.get('b113','104,541,785')
+    b114_val = k3_d.get('b114','82,390,693')
+    b115_val = k3_d.get('b115','78,941,000')
 
-    with col3:
-        st.markdown("""
-        <div class="unified-card k3-card">
-            <div class="card-section-top">
-                <span class="card-label">歷史預算總額</span>
-                <div class="hero-val-wrapper">
-                    <span class="hero-value">337,458,542</span><span class="unit">枚</span>
-                </div>
-                <span class="section-note-top-k3">自 110 年度累計至今</span>
-            </div>
-            <div class="divider-line-center"></div>
-            <div class="card-section-bottom">
-                <div class="budget-grid">
-                    <div class="budget-item"><span class="b-year">110年</span><span class="val">54,000,000</span><span class="b-unit">枚</span></div>
-                    <div class="budget-item"><span class="b-year">111年</span><span class="val">53,000,000</span><span class="b-unit">枚</span></div>
-                    <div class="budget-item"><span class="b-year">112年</span><span class="val">57,280,000</span><span class="b-unit">枚</span></div>
-                    <div class="budget-item"><span class="b-year">113年</span><span class="val">74,380,000</span><span class="b-unit">枚</span></div>
-                    <div class="budget-item"><span class="b-year">114年</span><span class="val">98,798,542</span><span class="b-unit">枚</span></div>
-                    <div class="budget-item" style="border-bottom:none;"><span class="b-year">115年</span><span class="val">-</span><span class="b-unit">待編</span></div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    exp26_str = f"{int(k4_d.get('expire_20260930_coins', 0)):,}"
+    exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
-    with col4:
-        st.markdown(f"""
-        <div class="unified-card k4-card">
-            <div class="card-section-top">
-                <span class="card-label">金幣到期預警</span>
-                <div class="expire-list-container">
-                    <div class="expire-row">
-                        <span class="expire-date">2026/09/30</span>
-                        <div><span class="expire-number">{int(k4.get('expire_20260930_coins', 0)):,}</span><span class="expire-unit">枚</span></div>
-                    </div>
-                    <div class="expire-row">
-                        <span class="expire-date">2027/09/30</span>
-                        <div><span class="expire-number">{int(k4.get('expire_20270930_coins', 0)):,}</span><span class="expire-unit">枚</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="divider-line-center"></div>
-            <div class="card-section-bottom">
-                <span class="card-label">系統營運備註</span>
-                <ul class="ops-notes">
-                    <li><span class="note-tag">維護</span>06/04 02:00 資料庫升級作業</li>
-                    <li><span class="note-tag">封測</span>V9.6 控制台與動態網頁上線</li>
-                </ul>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    # ==========================================
+    # 四欄佈局 (套用您原始的黃金比例 [0.9, 1, 1.2, 1.2])
+    # ==========================================
+    k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
+
+    with k1:
+        html_k1 = (
+            f'<div class="unified-card k1-card">'
+                f'<div class="card-section-top">'
+                    f'<span class="card-label">累積會員總數</span>'
+                    f'<div class="hero-val-wrapper">'
+                        f'<span class="hero-value">{t_users_str}</span><span class="unit">人</span>'
+                    f'</div>'
+                    f'<div class="growth-tag">▲ 本週新增 +{w_users_str} 人</div>'
+                f'</div>'
+                f'<div class="divider-line-center"></div>'
+                f'<div class="card-section-bottom">'
+                    f'<span class="card-label">臺東金幣總發放數</span>'
+                    f'<div class="hero-val-wrapper">'
+                        f'<span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span>'
+                    f'</div>'
+                    f'<div class="section-note-bottom">累積自 110/01/01 起算</div>'
+                f'</div>'
+            f'</div>'
+        )
+        st.markdown(html_k1, unsafe_allow_html=True)
+
+    with k2:
+        html_k2 = (
+            f'<div class="unified-card k2-card">'
+                f'<div class="card-section-top">'
+                    f'<span class="card-label">當週指標</span>'
+                    f'<div class="app-list-item" style="margin-top: 8px;">✨ 當週發放：<span class="data-bold">{w_issued_str}</span> 枚</div>'
+                    f'<div class="app-list-item">🎁 當週兌換：<span class="data-bold">{w_redeemed_str}</span> 枚</div>'
+                    f'<div class="app-list-item">💲 消費店家：<span class="data-bold">{active_stores_str}</span> 家</div>'
+                    f'<div class="app-list-item">🏪 總特約店：<span class="data-bold">{total_stores_str}</span> 家</div>'
+                    f'<div class="app-list-item">📈 新增店家：<span class="data-bold">+{new_stores_str}</span> 家</div>'
+                f'</div>'
+                f'<div class="divider-line-center"></div>'
+                f'<div class="card-section-bottom">'
+                    f'<span class="card-label">推播統計</span>'
+                    f'<div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div>'
+                    f'<div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div>'
+                f'</div>'
+            f'</div>'
+        )
+        st.markdown(html_k2, unsafe_allow_html=True)
+
+    with k3:
+        html_k3 = (
+            f'<div class="unified-card k3-card">'
+                f'<div class="card-section-top">'
+                    f'<span class="card-label">臺東金幣總預算數</span>'
+                    f'<div class="hero-val-wrapper">'
+                        f'<span class="hero-value">576,127,828</span><span class="unit">枚</span>'
+                    f'</div>'
+                    f'<div class="section-note-top-k3">累計 110至115年度預算(11-17期)</div>'
+                f'</div>'
+                f'<div class="divider-line-center"></div>'
+                f'<div class="card-section-bottom">'
+                    f'<span class="card-label">📅 歷年預算明細</span>'
+                    f'<div class="budget-grid">'
+                        f'<div class="budget-item"><span class="b-year">110年/11+12期</span><span class="val">{b110_val}</span><span class="b-unit">枚</span></div>'
+                        f'<div class="budget-item"><span class="b-year">111年/13期</span><span class="val">{b111_val}</span><span class="b-unit">枚</span></div>'
+                        f'<div class="budget-item"><span class="b-year">112年/14期</span><span class="val">{b112_val}</span><span class="b-unit">枚</span></div>'
+                        f'<div class="budget-item"><span class="b-year">113年/15期</span><span class="val">{b113_val}</span><span class="b-unit">枚</span></div>'
+                        f'<div class="budget-item"><span class="b-year">114年/16期</span><span class="val">{b114_val}</span><span class="b-unit">枚</span></div>'
+                        f'<div class="budget-item"><span class="b-year">115年/17期</span><span class="val">{b115_val}</span><span class="b-unit">枚</span></div>'
+                    f'</div>'
+                f'</div>'
+            f'</div>'
+        )
+        st.markdown(html_k3, unsafe_allow_html=True)
+
+    with k4:
+        html_k4 = (
+            f'<div class="unified-card k4-card">'
+                f'<div class="card-section-top">'
+                    f'<span class="card-label">⚠️ 金幣到期預警</span>'
+                    f'<div class="expire-list-container">'
+                        f'<div class="expire-row">'
+                            f'<span class="expire-date">2026/09/30 到期</span>'
+                            f'<div class="expire-val-wrapper">'
+                                f'<span class="expire-number">{exp26_str}</span><span class="expire-unit">枚</span>'
+                            f'</div>'
+                        f'</div>'
+                        f'<div class="expire-row">'
+                            f'<span class="expire-date">2027/09/30 到期</span>'
+                            f'<div class="expire-val-wrapper">'
+                                f'<span class="expire-number">{exp27_str}</span><span class="expire-unit">枚</span>'
+                            f'</div>'
+                        f'</div>'
+                    f'</div>'
+                f'</div>'
+                f'<div class="divider-line-center"></div>'
+                f'<div class="card-section-bottom">'
+                    f'<span class="card-label">📢 營運備註整理</span>'
+                    f'<ul class="ops-notes">'
+                        f'<li><span class="note-tag">維護</span>114/06/04 因 4.0 上線系統關閉維護</li>'
+                        f'<li><span class="note-tag">封測</span>114/06/23-27 進行 4.0 核心封測</li>'
+                        f'<li><span class="note-tag">推播</span>113/09/25-11/06 暫停金幣推播</li>'
+                        f'<li><span class="note-tag">對象</span>推播含所有用戶及縣民群組</li>'
+                        f'<li><span class="note-tag">基準</span>金幣統計自 110/01/01 起算</li>'
+                    f'</ul>'
+                f'</div>'
+            f'</div>'
+        )
+        st.markdown(html_k4, unsafe_allow_html=True)
