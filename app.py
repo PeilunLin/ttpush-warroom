@@ -243,18 +243,23 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     # 🌟 第一層：固定置頂的天際線 Title
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # 🌟 專屬 CSS 魔法：限定「主畫面」的下拉選單強制往上拉，與膠囊完美重疊！
-    st.markdown("""
     <style>
+    /* 1. 隱形選單完美疊合魔法 */
     section[data-testid="stMain"] div[data-testid="stSelectbox"] {
         margin-top: -60px !important; 
         opacity: 0 !important;        
         z-index: 999 !important;      
         cursor: pointer !important;
     }
+    /* 2. 側邊控制台「懸浮抽屜」魔法，保證不擠壓主畫面 */
+    section[data-testid="stSidebar"] {
+        position: absolute !important;
+        z-index: 99999 !important;
+        height: 100vh !important;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.5); /* 加點陰影讓抽屜更有立體感 */
+    }
     </style>
-    """, unsafe_allow_html=True)
-
+    
     # 🌟 第二層：時光機獨立層 (Title之下，K1卡片之上)
     st.markdown(f"""
     <div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px; position: relative;">
