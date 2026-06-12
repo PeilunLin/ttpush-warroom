@@ -9,7 +9,7 @@ import time
 # ==========================================
 # 1. 🌐 全域設定與 CSS 載入
 # ==========================================
-st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
 if os.path.exists("style.css"):
     with open("style.css", "r", encoding="utf-8") as f:
@@ -39,12 +39,15 @@ if "selected_period" not in st.session_state:
 def on_sidebar_change():
     st.session_state.selected_period = st.session_state.capsule_native_key
 
+def on_hidden_capsule_change():
+    st.session_state.selected_period = st.session_state.capsule_hidden_key
+
 # ==========================================
-# 3. 🎛️ 左側控制台開發
+# 3. 🎛️ 左側控制台開發 (純粹工作抽屜，格式完全不動)
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據自動化清洗引擎 v9.8")
+    st.caption("台東金幣大數據自動化清洗引擎 v10.0")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -56,17 +59,7 @@ with st.sidebar:
     st.markdown("---")
     
     if nav_tab == "👀 戰情首頁":
-        st.markdown("#### 📅 歷史週報快速檢視")
-        st.selectbox(
-            "請選擇欲調閱的營業週間：",
-            options=historical_periods_list,
-            index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0,
-            key="capsule_native_key",
-            on_change=on_sidebar_change,
-            label_visibility="collapsed"
-        )
         st.info(f"💡 目前戰情室正定錨在：\n`{st.session_state.selected_period}`")
-        
         st.markdown("---")
         st.markdown("#### 📥 歷史數據匯出")
         export_records = []
@@ -243,30 +236,42 @@ with st.sidebar:
 
 
 # ==========================================
-# 4. 📺 主畫面渲染 (完美繼承舊版設計)
+# 4. 📺 主畫面渲染 (全新 V10.0 三層獨立層架構)
 # ==========================================
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
+    # 🌟 第一層：固定置頂的天際線 Title
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
+    # 🌟 第二層：時光機獨立層 (Title之下，K1卡片之上)
     st.markdown(f"""
-    <div class="capsule-visual-container">
+    <div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px;">
         <div class="morandi-static-capsule">
             {st.session_state.selected_period}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 提取當前區間數據
+    # 隱形控制核心 (死死重疊在綠色膠囊上，點擊即可切換日期)
+    st.selectbox(
+        "隱形控制核心",
+        options=historical_periods_list,
+        index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0,
+        label_visibility="collapsed",
+        key="capsule_hidden_key",
+        on_change=on_hidden_capsule_change
+    )
+    
+    # 撐開與下方卡片的呼吸間距，確保絕不發生重疊撞車
+    st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+
+    # 🌟 第三層：資料提取與原始黃金卡片網格
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
     k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "78,941,000"})
     k4_d = current_data.get("k4_metrics", {})
 
-    # ==========================================
-    # 變數抽取區 (完全還原)
-    # ==========================================
     t_users_str = f"{int(k1_d.get('actual_total_users', 0)):,}"
     w_users_str = f"{int(k1_d.get('derived_weekly_new_users', 0)):,}"
     t_push_str = f"{int(k1_d.get('total_push_accumulated', 0)):,}"
@@ -289,9 +294,7 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     exp26_str = f"{int(k4_d.get('expire_20260930_coins', 0)):,}"
     exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
-    # ==========================================
-    # 四欄佈局 (套用您原始的黃金比例 [0.9, 1, 1.2, 1.2])
-    # ==========================================
+    # 恢復黃金比例排版
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
 
     with k1:
