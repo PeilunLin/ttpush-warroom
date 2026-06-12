@@ -240,9 +240,9 @@ with st.sidebar:
 # ==========================================
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
-    # 🌟 第一層：固定置頂的天際線 Title
-    st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
-<style>
+  # 🌟 專屬 CSS 魔法：疊合隱形選單 + 讓側邊欄懸浮不推擠主畫面
+    st.markdown("""
+    <style>
     /* 1. 隱形選單完美疊合魔法 */
     section[data-testid="stMain"] div[data-testid="stSelectbox"] {
         margin-top: -60px !important; 
@@ -258,6 +258,7 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
         box-shadow: 5px 0 15px rgba(0,0,0,0.5); /* 加點陰影讓抽屜更有立體感 */
     }
     </style>
+    """, unsafe_allow_html=True)
 
     # 🌟 第二層：時光機獨立層 (Title之下，K1卡片之上)
     st.markdown(f"""
