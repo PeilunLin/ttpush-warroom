@@ -3,7 +3,7 @@
         "k1_metrics": {
             "actual_total_users": 145134,
             "derived_weekly_new_users": 81,
-            "total_push_accumulated": 6491,
+            "total_push_accumulated": 6503,
             "weekly_push_current": 26
         },
         "k2_metrics": {
@@ -643,20 +643,20 @@
             "expire_20270930_coins": 392233
         }
     },
-    "統計區間：115/05/29 — 115/06/04": {
+    "統計區間：115/06/05 — 115/06/11": {
         "k1_metrics": {
-            "actual_total_users": 145134,
-            "derived_weekly_new_users": 81,
-            "total_push_accumulated": 6491,
-            "weekly_push_current": 26
+            "actual_total_users": 145194,
+            "derived_weekly_new_users": 60,
+            "total_push_accumulated": 6503,
+            "weekly_push_current": 0
         },
         "k2_metrics": {
-            "weekly_coins_issued": 1217350,
-            "weekly_coins_redeemed_audited": 950520,
-            "active_stores_count": 102,
-            "new_stores_adjusted": 0,
-            "total_accumulated_coins": 350736622,
-            "total_stores_accumulated": 679
+            "weekly_coins_issued": 1271810,
+            "weekly_coins_redeemed_audited": 1250390,
+            "active_stores_count": 99,
+            "new_stores_adjusted": 80,
+            "total_accumulated_coins": 352008432,
+            "total_stores_accumulated": 759
         },
         "k3_metrics": {
             "b110": "176,839,060",
