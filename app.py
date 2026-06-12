@@ -11,15 +11,19 @@ import time
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
-if os.path.exists("style.css"):
-    with open("style.css", "r", encoding="utf-8") as f:
+# 🌟 絕對路徑魔法：抓出目前 app.py 所在的真實絕對位置
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+CSS_PATH = os.path.join(BASE_DIR, "style.css")
+if os.path.exists(CSS_PATH):
+    with open(CSS_PATH, "r", encoding="utf-8") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ==========================================
-# 2. 🧠 資料庫雙大腦初始化
+# 2. 🧠 資料庫雙大腦初始化 (強制綁定絕對路徑)
 # ==========================================
-JSON_FILE = "metrics_history.json"
-BAK_FILE = "metrics_history.json.bak"
+JSON_FILE = os.path.join(BASE_DIR, "metrics_history.json")
+BAK_FILE = os.path.join(BASE_DIR, "metrics_history.json.bak")
 
 def load_data():
     if os.path.exists(JSON_FILE):
@@ -43,11 +47,11 @@ def on_hidden_capsule_change():
     st.session_state.selected_period = st.session_state.capsule_hidden_key
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (純粹工作抽屜，格式完全不動)
+# 3. 🎛️ 左側控制台開發
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據自動化清洗引擎 v10.3")
+    st.caption("台東金幣大數據自動化清洗引擎 v10.6")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -214,38 +218,22 @@ with st.sidebar:
 
         st.markdown("---")
         st.markdown("#### ⚙️ 資料庫安全閘門")
-        col_bak, col_rst = st.columns(2)
-        with col_bak:
-            if st.button("💾 手動備份", use_container_width=True):
-                with open(BAK_FILE, "w", encoding="utf-8") as bak_f: json.dump(DATA_ENGINE, bak_f, ensure_ascii=False, indent=4)
-                st.sidebar.success("備份完畢")
-        with col_rst:
-            if st.button("⏪ 一鍵還原", use_container_width=True):
-                if os.path.exists(BAK_FILE):
-                    with open(BAK_FILE, "r", encoding="utf-8") as bak_f: restored_data = json.load(bak_f)
-                    with open(JSON_FILE, "w", encoding="utf-8") as f: json.dump(restored_data, f, ensure_ascii=False, indent=4)
-                    st.rerun()
+        if st.button("💾 手動備份", use_container_width=True):
+            with open(BAK_FILE, "w", encoding="utf-8") as bak_f: json.dump(DATA_ENGINE, bak_f, ensure_ascii=False, indent=4)
+            st.sidebar.success("備份完畢")
 
-    elif nav_tab == "💰 預算管理":
-        st.title("💰 局處預算管理系統")
-        st.info("此區塊已與右側大數據看板解耦。未來將在這裡渲染專屬的局處預算動態表格，讓您直接在網頁上調配各單位的剩餘金幣！")
-
-    elif nav_tab == "📞 客服紀錄":
-        st.title("📞 客服陳情追蹤看板")
-        st.info("此區塊已成功獨立。未來將導入 Trello 般的 Kanban 看板，讓第一線話務人員在此快速建檔追蹤異常案件！")
+    elif nav_tab in ["💰 預算管理", "📞 客服紀錄"]:
+        st.info("模組擴充準備中...")
 
 # ==========================================
-# 4. 📺 主畫面渲染 (回歸原生穩健排版 + 膠囊疊合)
+# 4. 📺 主畫面渲染
 # ==========================================
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
-    # 🌟 第一層：固定置頂的天際線 Title
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # 🌟 專屬 CSS 魔法：疊合隱形選單 (移除會卡住的側邊欄懸浮魔法，回歸原生穩健排版)
     st.markdown("""
     <style>
-    /* 隱形選單完美疊合魔法 */
     section[data-testid="stMain"] div[data-testid="stSelectbox"] {
         margin-top: -60px !important; 
         opacity: 0 !important;        
@@ -255,7 +243,6 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     </style>
     """, unsafe_allow_html=True)
 
-    # 🌟 第二層：時光機獨立層 (Title之下，K1卡片之上)
     st.markdown(f"""
     <div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px; position: relative;">
         <div class="morandi-static-capsule">
@@ -264,7 +251,6 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     </div>
     """, unsafe_allow_html=True)
 
-    # 隱形控制核心 (因為上面的 CSS，它現在會死死蓋在膠囊上)
     st.selectbox(
         "隱形控制核心",
         options=historical_periods_list,
@@ -274,14 +260,12 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
         on_change=on_hidden_capsule_change
     )
     
-    # 撐開與下方卡片的呼吸間距，把被下拉選單吃掉的空間補回來
     st.markdown("<div style='margin-bottom: 35px;'></div>", unsafe_allow_html=True)
 
-    # 🌟 第三層：資料提取與原始黃金卡片網格
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
-    k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "78,941,000"})
+    k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "80,681,000"})
     k4_d = current_data.get("k4_metrics", {})
 
     t_users_str = f"{int(k1_d.get('actual_total_users', 0)):,}"
@@ -301,12 +285,18 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     b112_val = k3_d.get('b112','66,302,010')
     b113_val = k3_d.get('b113','104,541,785')
     b114_val = k3_d.get('b114','82,390,693')
-    b115_val = k3_d.get('b115','78,941,000')
+    b115_val = k3_d.get('b115','80,681,000')
+
+    # 🌟 V10.6 更新：自動清洗與加總預算邏輯
+    def parse_budget(val):
+        return int(str(val).replace(',', '').strip() or 0)
+    
+    total_budget_num = parse_budget(b110_val) + parse_budget(b111_val) + parse_budget(b112_val) + parse_budget(b113_val) + parse_budget(b114_val) + parse_budget(b115_val)
+    total_budget_str = f"{total_budget_num:,}"
 
     exp26_str = f"{int(k4_d.get('expire_20260930_coins', 0)):,}"
     exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
-    # 恢復黃金比例排版
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
 
     with k1:
@@ -321,11 +311,9 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
                 f'</div>'
                 f'<div class="divider-line-center"></div>'
                 f'<div class="card-section-bottom">'
-                    f'<span class="card-label">臺東金幣總發放數</span>'
-                    f'<div class="hero-val-wrapper">'
-                        f'<span class="long-value" style="font-size: 1.5rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span>'
-                    f'</div>'
-                    f'<div class="section-note-bottom">累積自 110/01/01 起算</div>'
+                    f'<span class="card-label">推播統計</span>'
+                    f'<div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div>'
+                    f'<div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div>'
                 f'</div>'
             f'</div>'
         )
@@ -344,21 +332,24 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
                 f'</div>'
                 f'<div class="divider-line-center"></div>'
                 f'<div class="card-section-bottom">'
-                    f'<span class="card-label">推播統計</span>'
-                    f'<div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div>'
-                    f'<div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div>'
+                    f'<span class="card-label">臺東金幣總發放數</span>'
+                    f'<div class="hero-val-wrapper">'
+                        f'<span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span>'
+                    f'</div>'
+                    f'<div class="section-note-bottom">累積自 110/01/01 起算</div>'
                 f'</div>'
             f'</div>'
         )
         st.markdown(html_k2, unsafe_allow_html=True)
 
     with k3:
+        # 🌟 將寫死的數字替換為動態變數 total_budget_str
         html_k3 = (
             f'<div class="unified-card k3-card">'
                 f'<div class="card-section-top">'
                     f'<span class="card-label">臺東金幣總預算數</span>'
                     f'<div class="hero-val-wrapper">'
-                        f'<span class="hero-value">576,127,828</span><span class="unit">枚</span>'
+                        f'<span class="hero-value">{total_budget_str}</span><span class="unit">枚</span>'
                     f'</div>'
                     f'<div class="section-note-top-k3">累計 110至115年度預算(11-17期)</div>'
                 f'</div>'
