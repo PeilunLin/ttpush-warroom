@@ -241,21 +241,14 @@ with st.sidebar:
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
   # 🌟 專屬 CSS 魔法：疊合隱形選單 + 讓側邊欄懸浮不推擠主畫面
-    st.markdown("""
+  st.markdown("""
     <style>
-    /* 1. 隱形選單完美疊合魔法 */
+    /* 隱形選單完美疊合魔法 */
     section[data-testid="stMain"] div[data-testid="stSelectbox"] {
         margin-top: -60px !important; 
         opacity: 0 !important;        
         z-index: 999 !important;      
         cursor: pointer !important;
-    }
-    /* 2. 側邊控制台「懸浮抽屜」魔法，保證不擠壓主畫面 */
-    section[data-testid="stSidebar"] {
-        position: absolute !important;
-        z-index: 99999 !important;
-        height: 100vh !important;
-        box-shadow: 5px 0 15px rgba(0,0,0,0.5); /* 加點陰影讓抽屜更有立體感 */
     }
     </style>
     """, unsafe_allow_html=True)
