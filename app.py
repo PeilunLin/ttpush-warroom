@@ -47,7 +47,7 @@ def on_hidden_capsule_change():
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據自動化清洗引擎 v10.0")
+    st.caption("台東金幣大數據自動化清洗引擎 v10.1")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -236,23 +236,35 @@ with st.sidebar:
 
 
 # ==========================================
-# 4. 📺 主畫面渲染 (全新 V10.0 三層獨立層架構)
+# 4. 📺 主畫面渲染 (全新 V10.1 膠囊完美疊合版)
 # ==========================================
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
     # 🌟 第一層：固定置頂的天際線 Title
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
+    # 🌟 專屬 CSS 魔法：限定「主畫面」的下拉選單強制往上拉，與膠囊完美重疊！
+    st.markdown("""
+    <style>
+    section[data-testid="stMain"] div[data-testid="stSelectbox"] {
+        margin-top: -60px !important; 
+        opacity: 0 !important;        
+        z-index: 999 !important;      
+        cursor: pointer !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # 🌟 第二層：時光機獨立層 (Title之下，K1卡片之上)
     st.markdown(f"""
-    <div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px;">
+    <div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px; position: relative;">
         <div class="morandi-static-capsule">
             {st.session_state.selected_period}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 隱形控制核心 (死死重疊在綠色膠囊上，點擊即可切換日期)
+    # 隱形控制核心 (因為上面的 CSS，它現在會死死蓋在膠囊上)
     st.selectbox(
         "隱形控制核心",
         options=historical_periods_list,
@@ -262,8 +274,8 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
         on_change=on_hidden_capsule_change
     )
     
-    # 撐開與下方卡片的呼吸間距，確保絕不發生重疊撞車
-    st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+    # 撐開與下方卡片的呼吸間距，把被下拉選單吃掉的空間補回來
+    st.markdown("<div style='margin-bottom: 35px;'></div>", unsafe_allow_html=True)
 
     # 🌟 第三層：資料提取與原始黃金卡片網格
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
