@@ -259,9 +259,6 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
         key="capsule_hidden_key",
         on_change=on_hidden_capsule_change
     )
-    
-    st.markdown("<div style='margin-bottom: 35px;'></div>", unsafe_allow_html=True)
-
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
