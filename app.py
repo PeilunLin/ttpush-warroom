@@ -47,7 +47,7 @@ def on_hidden_capsule_change():
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據自動化清洗引擎 v10.1")
+    st.caption("台東金幣大數據自動化清洗引擎 v10.3")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -234,14 +234,16 @@ with st.sidebar:
         st.title("📞 客服陳情追蹤看板")
         st.info("此區塊已成功獨立。未來將導入 Trello 般的 Kanban 看板，讓第一線話務人員在此快速建檔追蹤異常案件！")
 
-
 # ==========================================
-# 4. 📺 主畫面渲染 (全新 V10.1 膠囊完美疊合版)
+# 4. 📺 主畫面渲染 (回歸原生穩健排版 + 膠囊疊合)
 # ==========================================
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
-  # 🌟 專屬 CSS 魔法：疊合隱形選單 + 讓側邊欄懸浮不推擠主畫面
-  st.markdown("""
+    # 🌟 第一層：固定置頂的天際線 Title
+    st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
+    
+    # 🌟 專屬 CSS 魔法：疊合隱形選單 (移除會卡住的側邊欄懸浮魔法，回歸原生穩健排版)
+    st.markdown("""
     <style>
     /* 隱形選單完美疊合魔法 */
     section[data-testid="stMain"] div[data-testid="stSelectbox"] {
