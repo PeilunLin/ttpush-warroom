@@ -323,7 +323,7 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
                 f'<div class="card-section-bottom">'
                     f'<span class="card-label">臺東金幣總發放數</span>'
                     f'<div class="hero-val-wrapper">'
-                        f'<span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span>'
+                        f'<span class="long-value" style="font-size: 1.5rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span>'
                     f'</div>'
                     f'<div class="section-note-bottom">累積自 110/01/01 起算</div>'
                 f'</div>'
