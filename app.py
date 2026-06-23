@@ -46,12 +46,23 @@ def on_sidebar_change():
 def on_hidden_capsule_change():
     st.session_state.selected_period = st.session_state.capsule_hidden_key
 
+# 🌟 報表抓取邏輯升級：無堅不摧的數字萃取引擎
+def safe_parse_int(val):
+    try:
+        # 去除千分位逗號、"枚" 等多餘字元
+        clean_val = str(val).replace(',', '').replace('枚', '').strip()
+        if not clean_val: return None
+        # 先轉 float 解決 "87.0" 的問題，再轉 int
+        return int(float(clean_val))
+    except (ValueError, TypeError):
+        return None
+
 # ==========================================
 # 3. 🎛️ 左側控制台開發
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據自動化清洗引擎 v10.6")
+    st.caption("台東金幣大數據自動化清洗引擎 v10.10")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -101,7 +112,27 @@ with st.sidebar:
         upload_mode = st.radio("請選擇匯入管線：", options=["✨ 智慧新版雙表", "⏳ 舊版單表"], horizontal=True)
         
         if upload_mode == "✨ 智慧新版雙表":
+            # 獲取上週歷史資料，以便進行 K1 運算
+            prev_data = DATA_ENGINE.get(historical_periods_list[0] if historical_periods_list else "尚無資料", {})
+            prev_k1 = prev_data.get("k1_metrics", {})
+            prev_k2 = prev_data.get("k2_metrics", {})
+            prev_k3 = prev_data.get("k3_metrics", {})
+            prev_k4 = prev_data.get("k4_metrics", {})
+            
+            # 算出上週手動輸入的原始會員數，作為輸入框預設值
+            default_raw_users = max(0, int(prev_k1.get("actual_total_users", 40627)) - 40627)
+
+            # 🌟 K1 運算邏輯：手動輸入參數區塊
+            st.markdown("##### 📝 步驟一：輸入 K1 會員與推播參數")
+            col_k1_1, col_k1_2 = st.columns(2)
+            with col_k1_1:
+                raw_users_input = st.number_input("👤 本週系統後台會員總數", help="系統將自動加上 40,627 作為累積會員", min_value=0, step=1, value=default_raw_users)
+            with col_k1_2:
+                new_push_input = st.number_input("🚀 本週新增推播數", min_value=0, step=1, value=0)
+
+            st.markdown("##### 📁 步驟二：上傳本週報表與交易紀錄")
             new_files = st.file_uploader("拖曳本週「綜合報表」與「交易紀錄」：", type=["csv", "xlsx", "xls"], accept_multiple_files=True)
+            
             if new_files and len(new_files) > 0:
                 if st.button("🚀 啟動雙表對齊與繼承計算", use_container_width=True):
                     report_df, txn_df = None, None
@@ -114,26 +145,30 @@ with st.sidebar:
                     
                     if report_df is not None and txn_df is not None:
                         try:
-                            new_users, new_stores, issued, redeemed = 0, 0, 0, 0
+                            new_stores, issued, redeemed = 0, 0, 0
                             exp26_parsed, exp27_parsed = None, None
                             
+                            # 🌟 套用最新的安全萃取邏輯
                             for _, row in report_df.iterrows():
                                 col0 = str(row[0]).strip()
-                                col1 = str(row[1]).strip()
-                                if col0 == "新增會員數" and col1.isdigit(): new_users = int(col1)
-                                elif col0 == "新增特約店家數" and col1.isdigit(): new_stores = int(col1)
-                                elif col0 == "總金幣發放枚數" and col1.isdigit(): issued = int(col1)
-                                elif col0 == "民眾使用情況" and col1.isdigit(): redeemed = int(col1)
+                                parsed_val = safe_parse_int(row[1])
+                                
+                                if parsed_val is not None:
+                                    if col0 == "新增特約店家數": new_stores = parsed_val
+                                    elif col0 == "總金幣發放枚數": issued = parsed_val
+                                    elif col0 == "民眾使用情況": redeemed = parsed_val
                                 
                                 row_str = "||".join([str(c) for c in row])
                                 if "2026/09/30" in row_str or "2026/9/30" in row_str:
                                     for c in row:
-                                        clean_c = str(c).replace('枚','').replace(',','').strip()
-                                        if clean_c.isdigit(): exp26_parsed = int(clean_c)
+                                        val = safe_parse_int(c)
+                                        if val is not None and val > 1000: # 確保抓到的是大數字而非日期
+                                            exp26_parsed = val
                                 if "2027/09/30" in row_str or "2027/9/30" in row_str:
                                     for c in row:
-                                        clean_c = str(c).replace('枚','').replace(',','').strip()
-                                        if clean_c.isdigit(): exp27_parsed = int(clean_c)
+                                        val = safe_parse_int(c)
+                                        if val is not None and val > 1000:
+                                            exp27_parsed = val
                             
                             active_stores = txn_df["商家名稱"].nunique() if "商家名稱" in txn_df.columns else 0
                             
@@ -144,15 +179,21 @@ with st.sidebar:
                             else:
                                 period_key = "統計區間：115/05/29 — 115/06/04"
                             
-                            prev_data = DATA_ENGINE.get(historical_periods_list[0] if historical_periods_list else "尚無資料", {})
-                            prev_k1, prev_k2, prev_k3, prev_k4 = prev_data.get("k1_metrics", {}), prev_data.get("k2_metrics", {}), prev_data.get("k3_metrics", {}), prev_data.get("k4_metrics", {})
-                            
+                            # 🌟 K1 運算邏輯：依據您的規則進行計算
+                            # 累積會員總數 = 手動輸入 + 40627
+                            actual_users = raw_users_input + 40627
+                            # 當週新增會員數 = 手動輸入 - 上週原始資料庫數字 (等同於 本次累積 - 上次累積)
+                            derived_new_users = actual_users - int(prev_k1.get("actual_total_users", actual_users))
+                            # 推播統計累計 = 上週總數紀錄 + 本週新增
+                            actual_total_push = int(prev_k1.get("total_push_accumulated", 0)) + new_push_input
+
+                            # 更新至暫存資料庫
                             DATA_ENGINE[period_key] = {
                                 "k1_metrics": {
-                                    "actual_total_users": int(prev_k1.get("actual_total_users", 0)) + new_users,
-                                    "derived_weekly_new_users": new_users,
-                                    "total_push_accumulated": int(prev_k1.get("total_push_accumulated", 6465)),
-                                    "weekly_push_current": 0
+                                    "actual_total_users": actual_users,
+                                    "derived_weekly_new_users": derived_new_users,
+                                    "total_push_accumulated": actual_total_push,
+                                    "weekly_push_current": new_push_input
                                 },
                                 "k2_metrics": {
                                     "weekly_coins_issued": issued,
@@ -169,6 +210,7 @@ with st.sidebar:
                                 }
                             }
                             
+                            # 🌟 JSON 自動更新寫入執行
                             with open(BAK_FILE, "w", encoding="utf-8") as bak_f: json.dump(DATA_ENGINE, bak_f, ensure_ascii=False, indent=4)
                             with open(JSON_FILE, "w", encoding="utf-8") as f: json.dump(DATA_ENGINE, f, ensure_ascii=False, indent=4)
                                 
@@ -203,6 +245,7 @@ with st.sidebar:
                 with col_e2: new_exp27 = st.number_input("⏳ 2027到期", value=int(cur_k4.get("expire_20270930_coins", 0)), step=1)
                 
                 if st.form_submit_button("💾 儲存並覆寫"):
+                    # 將修改的數值放回 DATA_ENGINE
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["weekly_push_current"] = new_w_push
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["total_push_accumulated"] = new_t_push
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["derived_weekly_new_users"] = new_w_users
@@ -211,6 +254,8 @@ with st.sidebar:
                     DATA_ENGINE[st.session_state.selected_period]["k2_metrics"]["total_stores_accumulated"] = new_t_stores
                     DATA_ENGINE[st.session_state.selected_period]["k4_metrics"]["expire_20260930_coins"] = new_exp26
                     DATA_ENGINE[st.session_state.selected_period]["k4_metrics"]["expire_20270930_coins"] = new_exp27
+                    
+                    # 🌟 JSON 自動更新寫入執行
                     with open(JSON_FILE, "w", encoding="utf-8") as f: json.dump(DATA_ENGINE, f, ensure_ascii=False, indent=4)
                     st.success("✅ 數據已更新！")
                     time.sleep(0.5)
@@ -226,7 +271,7 @@ with st.sidebar:
         st.info("模組擴充準備中...")
 
 # ==========================================
-# 4. 📺 主畫面渲染
+# 4. 📺 主畫面渲染 (完美維持 K1~K4 原生呈現不變)
 # ==========================================
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
@@ -259,6 +304,7 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
         key="capsule_hidden_key",
         on_change=on_hidden_capsule_change
     )
+    
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
