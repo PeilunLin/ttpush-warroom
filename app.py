@@ -5,7 +5,7 @@ import os
 import io
 import datetime
 import time
-from github import Github # 🌟 新增 GitHub 操作套件
+from github import Github 
 
 # ==========================================
 # 1. 🌐 全域設定與 CSS 載入
@@ -20,7 +20,7 @@ if os.path.exists(CSS_PATH):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ==========================================
-# 2. 🧠 資料庫雙大腦初始化
+# 2. 🧠 資料庫雙大腦初始化與強制排序 
 # ==========================================
 JSON_FILE = os.path.join(BASE_DIR, "metrics_history.json")
 BAK_FILE = os.path.join(BASE_DIR, "metrics_history.json.bak")
@@ -35,7 +35,12 @@ def load_data():
     return {}
 
 DATA_ENGINE = load_data()
-historical_periods_list = list(DATA_ENGINE.keys()) if DATA_ENGINE else ["尚無資料"]
+
+# 強制將日期由新到舊排序，確保最新一週永遠在最上面
+if DATA_ENGINE:
+    historical_periods_list = sorted(list(DATA_ENGINE.keys()), reverse=True)
+else:
+    historical_periods_list = ["尚無資料"]
 
 if "selected_period" not in st.session_state:
     st.session_state.selected_period = historical_periods_list[0] if historical_periods_list else "尚無資料"
@@ -59,7 +64,7 @@ def safe_parse_int(val):
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據雲端自動化引擎 v11.0")
+    st.caption("台東金幣大數據雲端自動化引擎 v11.2")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -152,17 +157,26 @@ with st.sidebar:
                                     if col0 == "總金幣發放枚數": issued = parsed_val
                                     elif col0 == "民眾使用情況": redeemed = parsed_val
                                 
+                                # 🌟 V11.2 到期金幣抓取雷達全面升級 (相容 Excel 隱含日期轉換)
                                 row_str = "||".join([str(c) for c in row])
-                                if "2026/09/30" in row_str or "2026/9/30" in row_str:
+                                
+                                is_exp26 = any(d in row_str for d in ["2026/09/30", "2026/9/30", "2026-09-30", "2026-9-30", "115/09/30", "115-09-30"])
+                                is_exp27 = any(d in row_str for d in ["2027/09/30", "2027/9/30", "2027-09-30", "2027-9-30", "116/09/30", "116-09-30"])
+                                
+                                if is_exp26:
                                     for c in row:
                                         val = safe_parse_int(c)
-                                        if val is not None and val > 1000:
-                                            exp26_parsed = val
-                                if "2027/09/30" in row_str or "2027/9/30" in row_str:
+                                        # 必須大於1000，且不能是年份數字的誤判(20260930)
+                                        if val is not None and val > 1000 and val != 20260930:
+                                            if exp26_parsed is None or val > exp26_parsed:
+                                                exp26_parsed = val
+                                                
+                                if is_exp27:
                                     for c in row:
                                         val = safe_parse_int(c)
-                                        if val is not None and val > 1000:
-                                            exp27_parsed = val
+                                        if val is not None and val > 1000 and val != 20270930:
+                                            if exp27_parsed is None or val > exp27_parsed:
+                                                exp27_parsed = val
                             
                             active_stores = txn_df["商家名稱"].nunique() if "商家名稱" in txn_df.columns else 0
                             
@@ -231,7 +245,6 @@ with st.sidebar:
                 with col_e1: new_exp26 = st.number_input("⏳ 2026到期", value=int(cur_k4.get("expire_20260930_coins", 0)), step=1)
                 with col_e2: new_exp27 = st.number_input("⏳ 2027到期", value=int(cur_k4.get("expire_20270930_coins", 0)), step=1)
                 
-                # 🌟 核心：GitHub 自動同步邏輯
                 if st.form_submit_button("💾 儲存並同步至雲端"):
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["weekly_push_current"] = new_w_push
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["total_push_accumulated"] = new_t_push
@@ -244,11 +257,9 @@ with st.sidebar:
                     
                     updated_json_str = json.dumps(DATA_ENGINE, ensure_ascii=False, indent=4)
                     
-                    # 1. 寫入本地環境 (開發測試用)
                     with open(JSON_FILE, "w", encoding="utf-8") as f: 
                         f.write(updated_json_str)
                     
-                    # 2. 自動推播上 GitHub (正式上線用)
                     if "GITHUB_TOKEN" in st.secrets and "GITHUB_REPO" in st.secrets:
                         try:
                             with st.spinner("正在將資料安全同步至雲端 GitHub..."):
@@ -274,7 +285,7 @@ with st.sidebar:
         st.info("模組擴充準備中...")
 
 # ==========================================
-# 4. 📺 主畫面渲染 (完美維持 K1~K4 原生呈現不變)
+# 4. 📺 主畫面渲染
 # ==========================================
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     
