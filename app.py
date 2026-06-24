@@ -62,7 +62,7 @@ def safe_parse_int(val):
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據自動化清洗引擎 v10.10")
+    st.caption("台東金幣大數據自動化清洗引擎 v10.11")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -112,7 +112,7 @@ with st.sidebar:
         upload_mode = st.radio("請選擇匯入管線：", options=["✨ 智慧新版雙表", "⏳ 舊版單表"], horizontal=True)
         
         if upload_mode == "✨ 智慧新版雙表":
-            # 獲取上週歷史資料，以便進行 K1 運算
+            # 獲取上週歷史資料，以便進行 K1, K2 運算
             prev_data = DATA_ENGINE.get(historical_periods_list[0] if historical_periods_list else "尚無資料", {})
             prev_k1 = prev_data.get("k1_metrics", {})
             prev_k2 = prev_data.get("k2_metrics", {})
@@ -122,13 +122,15 @@ with st.sidebar:
             # 算出上週手動輸入的原始會員數，作為輸入框預設值
             default_raw_users = max(0, int(prev_k1.get("actual_total_users", 40627)) - 40627)
 
-            # 🌟 K1 運算邏輯：手動輸入參數區塊
-            st.markdown("##### 📝 步驟一：輸入 K1 會員與推播參數")
-            col_k1_1, col_k1_2 = st.columns(2)
-            with col_k1_1:
-                raw_users_input = st.number_input("👤 本週系統後台會員總數", help="系統將自動加上 40,627 作為累積會員", min_value=0, step=1, value=default_raw_users)
-            with col_k1_2:
+            # 🌟 參數輸入區塊：新增「特約店家」手動輸入
+            st.markdown("##### 📝 步驟一：輸入 K1 與 K2 手動參數")
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                raw_users_input = st.number_input("👤 系統後台會員總數", help="系統將自動加上 40,627 作為累積會員", min_value=0, step=1, value=default_raw_users)
+            with col_p2:
                 new_push_input = st.number_input("🚀 本週新增推播數", min_value=0, step=1, value=0)
+            
+            new_stores_input = st.number_input("📈 本週新增特約店家數", min_value=0, step=1, value=0)
 
             st.markdown("##### 📁 步驟二：上傳本週報表與交易紀錄")
             new_files = st.file_uploader("拖曳本週「綜合報表」與「交易紀錄」：", type=["csv", "xlsx", "xls"], accept_multiple_files=True)
@@ -145,17 +147,17 @@ with st.sidebar:
                     
                     if report_df is not None and txn_df is not None:
                         try:
-                            new_stores, issued, redeemed = 0, 0, 0
+                            # 移除 new_stores 的自動抓取，改由手動輸入取代
+                            issued, redeemed = 0, 0
                             exp26_parsed, exp27_parsed = None, None
                             
-                            # 🌟 套用最新的安全萃取邏輯
+                            # 🌟 套用最新的安全萃取邏輯 (僅抓取金幣與到期日)
                             for _, row in report_df.iterrows():
                                 col0 = str(row[0]).strip()
                                 parsed_val = safe_parse_int(row[1])
                                 
                                 if parsed_val is not None:
-                                    if col0 == "新增特約店家數": new_stores = parsed_val
-                                    elif col0 == "總金幣發放枚數": issued = parsed_val
+                                    if col0 == "總金幣發放枚數": issued = parsed_val
                                     elif col0 == "民眾使用情況": redeemed = parsed_val
                                 
                                 row_str = "||".join([str(c) for c in row])
@@ -179,13 +181,11 @@ with st.sidebar:
                             else:
                                 period_key = "統計區間：115/05/29 — 115/06/04"
                             
-                            # 🌟 K1 運算邏輯：依據您的規則進行計算
-                            # 累積會員總數 = 手動輸入 + 40627
+                            # 🌟 核心運算邏輯
                             actual_users = raw_users_input + 40627
-                            # 當週新增會員數 = 手動輸入 - 上週原始資料庫數字 (等同於 本次累積 - 上次累積)
                             derived_new_users = actual_users - int(prev_k1.get("actual_total_users", actual_users))
-                            # 推播統計累計 = 上週總數紀錄 + 本週新增
                             actual_total_push = int(prev_k1.get("total_push_accumulated", 0)) + new_push_input
+                            actual_total_stores = int(prev_k2.get("total_stores_accumulated", 679)) + new_stores_input
 
                             # 更新至暫存資料庫
                             DATA_ENGINE[period_key] = {
@@ -199,9 +199,9 @@ with st.sidebar:
                                     "weekly_coins_issued": issued,
                                     "weekly_coins_redeemed_audited": redeemed,
                                     "active_stores_count": active_stores,
-                                    "new_stores_adjusted": new_stores,
+                                    "new_stores_adjusted": new_stores_input,
                                     "total_accumulated_coins": int(prev_k2.get("total_accumulated_coins", 0)) + issued,
-                                    "total_stores_accumulated": int(prev_k2.get("total_stores_accumulated", 679)) + new_stores
+                                    "total_stores_accumulated": actual_total_stores
                                 },
                                 "k3_metrics": prev_k3,
                                 "k4_metrics": {
@@ -330,7 +330,6 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     b114_val = k3_d.get('b114','82,390,693')
     b115_val = k3_d.get('b115','80,681,000')
 
-    # 🌟 V10.6 更新：自動清洗與加總預算邏輯
     def parse_budget(val):
         return int(str(val).replace(',', '').strip() or 0)
     
@@ -386,7 +385,6 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
         st.markdown(html_k2, unsafe_allow_html=True)
 
     with k3:
-        # 🌟 將寫死的數字替換為動態變數 total_budget_str
         html_k3 = (
             f'<div class="unified-card k3-card">'
                 f'<div class="card-section-top">'
