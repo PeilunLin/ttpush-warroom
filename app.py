@@ -64,7 +64,7 @@ def safe_parse_int(val):
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據雲端自動化引擎 v11.2")
+    st.caption("台東金幣大數據雲端自動化引擎 v11.3")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -157,7 +157,7 @@ with st.sidebar:
                                     if col0 == "總金幣發放枚數": issued = parsed_val
                                     elif col0 == "民眾使用情況": redeemed = parsed_val
                                 
-                                # 🌟 V11.2 到期金幣抓取雷達全面升級 (相容 Excel 隱含日期轉換)
+                                # 🌟 V11.2 到期金幣抓取雷達全面升級 
                                 row_str = "||".join([str(c) for c in row])
                                 
                                 is_exp26 = any(d in row_str for d in ["2026/09/30", "2026/9/30", "2026-09-30", "2026-9-30", "115/09/30", "115-09-30"])
@@ -166,7 +166,6 @@ with st.sidebar:
                                 if is_exp26:
                                     for c in row:
                                         val = safe_parse_int(c)
-                                        # 必須大於1000，且不能是年份數字的誤判(20260930)
                                         if val is not None and val > 1000 and val != 20260930:
                                             if exp26_parsed is None or val > exp26_parsed:
                                                 exp26_parsed = val
@@ -280,6 +279,50 @@ with st.sidebar:
                         
                     time.sleep(1.5)
                     st.rerun()
+
+        # 🌟 V11.3 核心新增：刪除當期假資料並連動雲端
+        st.markdown("---")
+        st.markdown("#### 🚨 雲端資料庫管理")
+        with st.expander("🗑️ 刪除當期數據 (無法復原)", expanded=False):
+            st.warning(f"您即將徹底刪除 **{st.session_state.selected_period}** 的所有數據。刪除後將同步至雲端，且無法復原！")
+            if st.button("🚨 確認刪除並同步雲端", type="primary"):
+                if st.session_state.selected_period in DATA_ENGINE:
+                    # 1. 刪除記憶體中的該筆資料
+                    del DATA_ENGINE[st.session_state.selected_period]
+                    
+                    # 2. 更新本地端 JSON
+                    updated_json_str = json.dumps(DATA_ENGINE, ensure_ascii=False, indent=4)
+                    with open(JSON_FILE, "w", encoding="utf-8") as f:
+                        f.write(updated_json_str)
+                        
+                    # 3. 同步刪除至 GitHub 雲端
+                    if "GITHUB_TOKEN" in st.secrets and "GITHUB_REPO" in st.secrets:
+                        try:
+                            with st.spinner("正在抹除雲端資料..."):
+                                g = Github(st.secrets["GITHUB_TOKEN"])
+                                repo = g.get_repo(st.secrets["GITHUB_REPO"])
+                                contents = repo.get_contents("metrics_history.json")
+                                repo.update_file(
+                                    contents.path,
+                                    f"TTPush 戰情室自動刪除：{st.session_state.selected_period}",
+                                    updated_json_str,
+                                    contents.sha
+                                )
+                        except Exception as e:
+                            st.error(f"雲端同步刪除失敗: {e}")
+                    
+                    st.success(f"✅ {st.session_state.selected_period} 數據已刪除，恢復上一週狀態！")
+                    
+                    # 4. 重新導航至最新的原始週期
+                    if DATA_ENGINE:
+                        st.session_state.selected_period = sorted(list(DATA_ENGINE.keys()), reverse=True)[0]
+                    else:
+                        st.session_state.selected_period = "尚無資料"
+                        
+                    time.sleep(1.5)
+                    st.rerun()
+                else:
+                    st.error("找不到該週期的資料！")
 
     elif nav_tab in ["💰 預算管理", "📞 客服紀錄"]:
         st.info("模組擴充準備中...")
