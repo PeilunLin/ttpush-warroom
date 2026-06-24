@@ -5,13 +5,13 @@ import os
 import io
 import datetime
 import time
+from github import Github # 🌟 新增 GitHub 操作套件
 
 # ==========================================
 # 1. 🌐 全域設定與 CSS 載入
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
-# 🌟 絕對路徑魔法：抓出目前 app.py 所在的真實絕對位置
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CSS_PATH = os.path.join(BASE_DIR, "style.css")
@@ -20,7 +20,7 @@ if os.path.exists(CSS_PATH):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ==========================================
-# 2. 🧠 資料庫雙大腦初始化 (強制綁定絕對路徑)
+# 2. 🧠 資料庫雙大腦初始化
 # ==========================================
 JSON_FILE = os.path.join(BASE_DIR, "metrics_history.json")
 BAK_FILE = os.path.join(BASE_DIR, "metrics_history.json.bak")
@@ -46,13 +46,10 @@ def on_sidebar_change():
 def on_hidden_capsule_change():
     st.session_state.selected_period = st.session_state.capsule_hidden_key
 
-# 🌟 報表抓取邏輯升級：無堅不摧的數字萃取引擎
 def safe_parse_int(val):
     try:
-        # 去除千分位逗號、"枚" 等多餘字元
         clean_val = str(val).replace(',', '').replace('枚', '').strip()
         if not clean_val: return None
-        # 先轉 float 解決 "87.0" 的問題，再轉 int
         return int(float(clean_val))
     except (ValueError, TypeError):
         return None
@@ -62,7 +59,7 @@ def safe_parse_int(val):
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據自動化清洗引擎 v10.11")
+    st.caption("台東金幣大數據雲端自動化引擎 v11.0")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -108,21 +105,18 @@ with st.sidebar:
             )
 
     elif nav_tab == "🔄 週報維護":
-        st.warning("⚠️ 您已進入數據維護模式，操作將直接覆寫資料庫。")
+        st.warning("⚠️ 您已進入數據維護模式，操作將直接覆寫雲端資料庫。")
         upload_mode = st.radio("請選擇匯入管線：", options=["✨ 智慧新版雙表", "⏳ 舊版單表"], horizontal=True)
         
         if upload_mode == "✨ 智慧新版雙表":
-            # 獲取上週歷史資料，以便進行 K1, K2 運算
             prev_data = DATA_ENGINE.get(historical_periods_list[0] if historical_periods_list else "尚無資料", {})
             prev_k1 = prev_data.get("k1_metrics", {})
             prev_k2 = prev_data.get("k2_metrics", {})
             prev_k3 = prev_data.get("k3_metrics", {})
             prev_k4 = prev_data.get("k4_metrics", {})
             
-            # 算出上週手動輸入的原始會員數，作為輸入框預設值
             default_raw_users = max(0, int(prev_k1.get("actual_total_users", 40627)) - 40627)
 
-            # 🌟 參數輸入區塊：新增「特約店家」手動輸入
             st.markdown("##### 📝 步驟一：輸入 K1 與 K2 手動參數")
             col_p1, col_p2 = st.columns(2)
             with col_p1:
@@ -147,11 +141,9 @@ with st.sidebar:
                     
                     if report_df is not None and txn_df is not None:
                         try:
-                            # 移除 new_stores 的自動抓取，改由手動輸入取代
                             issued, redeemed = 0, 0
                             exp26_parsed, exp27_parsed = None, None
                             
-                            # 🌟 套用最新的安全萃取邏輯 (僅抓取金幣與到期日)
                             for _, row in report_df.iterrows():
                                 col0 = str(row[0]).strip()
                                 parsed_val = safe_parse_int(row[1])
@@ -164,7 +156,7 @@ with st.sidebar:
                                 if "2026/09/30" in row_str or "2026/9/30" in row_str:
                                     for c in row:
                                         val = safe_parse_int(c)
-                                        if val is not None and val > 1000: # 確保抓到的是大數字而非日期
+                                        if val is not None and val > 1000:
                                             exp26_parsed = val
                                 if "2027/09/30" in row_str or "2027/9/30" in row_str:
                                     for c in row:
@@ -181,13 +173,11 @@ with st.sidebar:
                             else:
                                 period_key = "統計區間：115/05/29 — 115/06/04"
                             
-                            # 🌟 核心運算邏輯
                             actual_users = raw_users_input + 40627
                             derived_new_users = actual_users - int(prev_k1.get("actual_total_users", actual_users))
                             actual_total_push = int(prev_k1.get("total_push_accumulated", 0)) + new_push_input
                             actual_total_stores = int(prev_k2.get("total_stores_accumulated", 679)) + new_stores_input
 
-                            # 更新至暫存資料庫
                             DATA_ENGINE[period_key] = {
                                 "k1_metrics": {
                                     "actual_total_users": actual_users,
@@ -210,11 +200,10 @@ with st.sidebar:
                                 }
                             }
                             
-                            # 🌟 JSON 自動更新寫入執行
                             with open(BAK_FILE, "w", encoding="utf-8") as bak_f: json.dump(DATA_ENGINE, bak_f, ensure_ascii=False, indent=4)
                             with open(JSON_FILE, "w", encoding="utf-8") as f: json.dump(DATA_ENGINE, f, ensure_ascii=False, indent=4)
                                 
-                            st.success(f"✅ 成功洗入新資料：{period_key}")
+                            st.success(f"✅ 成功解析暫存：{period_key} (請至下方確認並推播上雲端)")
                             st.session_state.selected_period = period_key
                             time.sleep(1)
                             st.rerun()
@@ -222,11 +211,9 @@ with st.sidebar:
                             st.error(f"解析失敗: {e}")
                     else:
                         st.warning("⚠️ 請務必「同時」上傳【報表】與【會員交易紀錄】喔！")
-        else:
-            uploaded_files = st.file_uploader("拖曳舊版 CSV 報表：", type=["csv"], accept_multiple_files=True)
 
         st.markdown("---")
-        st.markdown("#### ✏️ 手動數據微調")
+        st.markdown("#### ✏️ 手動數據微調與雲端寫入")
         with st.expander("點此展開微調面板", expanded=False):
             cur_data = DATA_ENGINE.get(st.session_state.selected_period, {})
             cur_k1, cur_k2, cur_k4 = cur_data.get("k1_metrics", {}), cur_data.get("k2_metrics", {}), cur_data.get("k4_metrics", {})
@@ -244,8 +231,8 @@ with st.sidebar:
                 with col_e1: new_exp26 = st.number_input("⏳ 2026到期", value=int(cur_k4.get("expire_20260930_coins", 0)), step=1)
                 with col_e2: new_exp27 = st.number_input("⏳ 2027到期", value=int(cur_k4.get("expire_20270930_coins", 0)), step=1)
                 
-                if st.form_submit_button("💾 儲存並覆寫"):
-                    # 將修改的數值放回 DATA_ENGINE
+                # 🌟 核心：GitHub 自動同步邏輯
+                if st.form_submit_button("💾 儲存並同步至雲端"):
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["weekly_push_current"] = new_w_push
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["total_push_accumulated"] = new_t_push
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["derived_weekly_new_users"] = new_w_users
@@ -255,17 +242,33 @@ with st.sidebar:
                     DATA_ENGINE[st.session_state.selected_period]["k4_metrics"]["expire_20260930_coins"] = new_exp26
                     DATA_ENGINE[st.session_state.selected_period]["k4_metrics"]["expire_20270930_coins"] = new_exp27
                     
-                    # 🌟 JSON 自動更新寫入執行
-                    with open(JSON_FILE, "w", encoding="utf-8") as f: json.dump(DATA_ENGINE, f, ensure_ascii=False, indent=4)
-                    st.success("✅ 數據已更新！")
-                    time.sleep(0.5)
+                    updated_json_str = json.dumps(DATA_ENGINE, ensure_ascii=False, indent=4)
+                    
+                    # 1. 寫入本地環境 (開發測試用)
+                    with open(JSON_FILE, "w", encoding="utf-8") as f: 
+                        f.write(updated_json_str)
+                    
+                    # 2. 自動推播上 GitHub (正式上線用)
+                    if "GITHUB_TOKEN" in st.secrets and "GITHUB_REPO" in st.secrets:
+                        try:
+                            with st.spinner("正在將資料安全同步至雲端 GitHub..."):
+                                g = Github(st.secrets["GITHUB_TOKEN"])
+                                repo = g.get_repo(st.secrets["GITHUB_REPO"])
+                                contents = repo.get_contents("metrics_history.json")
+                                repo.update_file(
+                                    contents.path,
+                                    f"TTPush 戰情室自動更新：{st.session_state.selected_period}",
+                                    updated_json_str,
+                                    contents.sha
+                                )
+                            st.success("✅ 雲端資料庫同步成功！")
+                        except Exception as e:
+                            st.error(f"❌ 雲端同步失敗，請檢查權限設定：{e}")
+                    else:
+                        st.info("ℹ️ 未偵測到 GitHub 金鑰，僅儲存於本地端。")
+                        
+                    time.sleep(1.5)
                     st.rerun()
-
-        st.markdown("---")
-        st.markdown("#### ⚙️ 資料庫安全閘門")
-        if st.button("💾 手動備份", use_container_width=True):
-            with open(BAK_FILE, "w", encoding="utf-8") as bak_f: json.dump(DATA_ENGINE, bak_f, ensure_ascii=False, indent=4)
-            st.sidebar.success("備份完畢")
 
     elif nav_tab in ["💰 預算管理", "📞 客服紀錄"]:
         st.info("模組擴充準備中...")
