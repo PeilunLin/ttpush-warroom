@@ -8,9 +8,58 @@ import time
 from github import Github 
 
 # ==========================================
-# 1. 🌐 全域設定與 CSS 載入
+# 1. 🌐 全域設定與 CSS 載入 (包含 V11.7 側邊欄懸浮排版)
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
+
+# 🌟 V11.7 側邊欄專屬 CSS 魔法
+st.markdown("""
+<style>
+/* 1. 移除 Streamlit 預設的側邊欄上方大片白邊 */
+[data-testid="stSidebarUserContent"] {
+    padding-top: 0rem !important;
+}
+
+/* 2. 懸浮置頂的標題區塊 (Title) */
+.sidebar-header-sticky {
+    position: sticky;
+    top: 0px;
+    background-color: #f0f2f6; /* 配合淺色模式側邊欄背景 */
+    z-index: 999;
+    padding-top: 1.5rem;
+    padding-bottom: 1rem;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    border-bottom: 2px dashed rgba(128, 128, 128, 0.4); /* 參考圖示的灰色虛線 */
+}
+
+/* 3. 懸浮置底的版本資訊區塊 (Footer) */
+.sidebar-footer-sticky {
+    position: sticky;
+    bottom: 0px;
+    background-color: #f0f2f6;
+    z-index: 999;
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    border-top: 2px dashed rgba(128, 128, 128, 0.4);
+    text-align: left;
+}
+
+/* 支援深色模式的背景自動切換 */
+@media (prefers-color-scheme: dark) {
+    .sidebar-header-sticky, .sidebar-footer-sticky {
+        background-color: #262730;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -36,7 +85,6 @@ def load_data():
 
 DATA_ENGINE = load_data()
 
-# 強制將日期由新到舊排序，確保最新一週永遠在最上面
 if DATA_ENGINE:
     historical_periods_list = sorted(list(DATA_ENGINE.keys()), reverse=True)
 else:
@@ -60,20 +108,29 @@ def safe_parse_int(val):
         return None
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (V11.6 營運校正版)
+# 3. 🎛️ 左側控制台開發 (V11.7)
 # ==========================================
 with st.sidebar:
-    st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據雲端自動化引擎 v11.6")
-    st.markdown("---")
+    
+    # --- 🌟 V11.7 固定在頂部的標題區塊 ---
+    st.markdown(
+        """
+        <div class="sidebar-header-sticky">
+            <h2 style="margin:0; font-size: 1.6rem; font-weight: 800; color: inherit; letter-spacing: -0.5px;">🎛️ TTPush 運維控制台</h2>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
     
     nav_tab = st.radio(
         "請選擇操作情境：",
         options=["👀 戰情首頁", "🔄 週報維護", "💰 預算管理", "📞 客服紀錄"],
-        horizontal=True,
+        horizontal=False, # 調整為垂直比較有側邊欄選單的感覺
         label_visibility="collapsed"
     )
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
     
     if nav_tab == "👀 戰情首頁":
         st.info(f"💡 目前戰情室正定錨在：\n**{st.session_state.selected_period}**")
@@ -125,23 +182,16 @@ with st.sidebar:
         # ==========================================
         st.markdown("### 📥 步驟一：參數設定與載入")
         
-        # 參數區 (美化輸入區塊)
         with st.container(border=True):
             st.markdown("##### 📝 手動參數")
             col_p1, col_p2 = st.columns(2)
-            with col_p1:
-                raw_users_input = st.number_input("👤 後台會員總數", min_value=0, step=1, value=default_raw_users)
-            with col_p2:
-                new_push_input = st.number_input("🚀 本週新增推播", min_value=0, step=1, value=0)
+            with col_p1: raw_users_input = st.number_input("👤 後台會員總數", min_value=0, step=1, value=default_raw_users)
+            with col_p2: new_push_input = st.number_input("🚀 本週新增推播", min_value=0, step=1, value=0)
             
-            # 🌟 V11.6 新增：當週會員錢包調整 (與新增店家並排)
             col_p3, col_p4 = st.columns(2)
-            with col_p3:
-                new_stores_input = st.number_input("📈 本週新增特約店家", min_value=0, step=1, value=0)
-            with col_p4:
-                wallet_adj_input = st.number_input("💰 當週會員錢包調整", step=1, value=0, help="正值為補發/匯入，負值為扣除/回收")
+            with col_p3: new_stores_input = st.number_input("📈 本週新增店家", min_value=0, step=1, value=0)
+            with col_p4: wallet_adj_input = st.number_input("💰 錢包調整項", step=1, value=0, help="正值為補發/匯入，負值為扣除/回收")
 
-        # 報表上傳區
         st.markdown("##### 📁 報表匯入")
         new_files = st.file_uploader("拖曳本週「綜合報表」與「交易紀錄」：", type=["csv", "xlsx", "xls"], accept_multiple_files=True, label_visibility="collapsed")
         
@@ -199,7 +249,6 @@ with st.sidebar:
                         actual_total_push = int(prev_k1.get("total_push_accumulated", 0)) + new_push_input
                         actual_total_stores = int(prev_k2.get("total_stores_accumulated", 679)) + new_stores_input
                         
-                        # 🌟 V11.6 邏輯：發放金幣 = 報表數字 + 錢包調整數字
                         adjusted_issued = issued + wallet_adj_input
 
                         DATA_ENGINE[period_key] = {
@@ -247,7 +296,7 @@ with st.sidebar:
             cur_k1, cur_k2, cur_k4 = cur_data.get("k1_metrics", {}), cur_data.get("k2_metrics", {}), cur_data.get("k4_metrics", {})
             
             with st.form("manual_override_form", border=False):
-                st.caption("請確認以下數據，若有誤差可直接修改後同步上雲端。")
+                st.caption("確認數據無誤後，即可點擊下方按鈕同步上雲端。")
                 col_p1, col_p2 = st.columns(2)
                 with col_p1: new_w_push = st.number_input("🚀 本週推播數", value=int(cur_k1.get("weekly_push_current", 0)), step=1)
                 with col_p2: new_t_push = st.number_input("📣 累積推播數", value=int(cur_k1.get("total_push_accumulated", 0)), step=1)
@@ -301,7 +350,7 @@ with st.sidebar:
         # ==========================================
         # 【視覺第三層】Danger Zone：危險操作防護區
         # ==========================================
-        st.divider()
+        st.markdown("---")
         st.markdown("#### 🚨 Danger Zone")
         with st.expander("🗑️ 刪除當期數據 (無法復原)", expanded=False):
             st.error(f"**警告：** 您即將徹底刪除\n`{st.session_state.selected_period}`\n的所有數據。刪除後將同步覆寫雲端，無法復原！")
@@ -342,6 +391,16 @@ with st.sidebar:
 
     elif nav_tab in ["💰 預算管理", "📞 客服紀錄"]:
         st.info("模組擴充準備中...")
+
+    # --- 🌟 V11.7 固定在底部的版本資訊區塊 ---
+    st.markdown(
+        """
+        <div class="sidebar-footer-sticky">
+            <span style="color: gray; font-size: 0.85rem; font-weight: 500;">台東金幣大數據雲端自動化引擎 v11.7</span>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
 
 # ==========================================
 # 4. 📺 主畫面渲染
