@@ -12,21 +12,23 @@ from github import Github
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
-# 🌟 V11.9 極簡留白美學 (完美支援亮/暗主題動態切換)
+# 🌟 V11.10 終極佈局鎖定 CSS 魔法
 st.markdown("""
 <style>
-/* 1. 移除 Streamlit 預設的側邊欄上方大片白邊 */
-[data-testid="stSidebarUserContent"] {
+/* 1. 暴力清除 Streamlit 預設的側邊欄頂部與底部巨大白邊 */
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
     padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
 }
 
-/* 2. 懸浮置頂的標題區塊 (使用原生變數完美融入背景) */
+/* 2. 絕對鎖定頂部標題區塊 */
 .sidebar-header-sticky {
     position: sticky;
     top: 0px;
     background-color: var(--secondary-background-color); 
     z-index: 999;
-    padding-top: 2rem;
+    /* 這裡的 padding-top 是為了將文字精準向下推，與原生 << 按鈕對齊 */
+    padding-top: 1.35rem; 
     padding-bottom: 1rem;
     margin-left: -1.5rem;
     margin-right: -1.5rem;
@@ -34,19 +36,32 @@ st.markdown("""
     padding-right: 1.5rem;
 }
 
-/* 3. 懸浮置底的版本資訊區塊 (使用原生變數完美融入背景) */
+/* 標題字體自適應與防重疊機制 */
+.sidebar-title-text {
+    margin: 0;
+    font-weight: 800;
+    color: inherit;
+    letter-spacing: -0.5px;
+    /* 限制最大寬度為 82%，保留右側空間給 << 按鈕，絕不重疊 */
+    max-width: 82%; 
+    /* 神奇的 clamp()：字體會隨側邊欄寬度自動縮放 (最小1.1rem, 最大1.65rem) */
+    font-size: clamp(1.1rem, 1.5vw + 0.5rem, 1.65rem);
+    line-height: 1.3;
+}
+
+/* 3. 絕對鎖定底部版本號區塊 */
 .sidebar-footer-sticky {
     position: sticky;
     bottom: 0px;
     background-color: var(--secondary-background-color);
     z-index: 999;
-    padding-top: 1rem;
+    padding-top: 1.5rem;
     padding-bottom: 2rem;
     margin-left: -1.5rem;
     margin-right: -1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
     text-align: center;
+    /* 加入與背景同色的隱形陰影，讓滑動的內容完美沒入底部 */
+    box-shadow: 0px -15px 15px var(--secondary-background-color);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -98,15 +113,15 @@ def safe_parse_int(val):
         return None
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (V11.9)
+# 3. 🎛️ 左側控制台開發 (V11.10 終極佈局版)
 # ==========================================
 with st.sidebar:
     
-    # --- 頂部懸浮標題 ---
+    # --- 🌟 V11.10 置頂懸浮標題 (套用動態縮放字體) ---
     st.markdown(
         """
         <div class="sidebar-header-sticky">
-            <h2 style="margin:0; font-size: 1.65rem; font-weight: 800; color: inherit; letter-spacing: -0.5px;">🎛️ TTPUSH維運控制台</h2>
+            <h2 class="sidebar-title-text">🎛️ TTPUSH維運控制台</h2>
         </div>
         """, 
         unsafe_allow_html=True
@@ -124,12 +139,9 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     
     if nav_tab == "👀 戰情首頁":
-        # 完美復刻的 Info Box
         st.info(f"💡 目前戰情室正定錨在：\n\n**{st.session_state.selected_period}**")
         
         st.markdown("<br>", unsafe_allow_html=True)
-        
-        # 專屬藍色大標題
         st.markdown('<h4 style="color: #2563eb; font-weight: 800; margin-bottom: 15px;">📥 歷史數據匯出</h4>', unsafe_allow_html=True)
         
         export_records = []
@@ -156,7 +168,6 @@ with st.sidebar:
                 df_export.to_excel(writer, index=False, sheet_name='TTPush歷史數據')
             output.seek(0)
             
-            # 主色按鈕
             st.download_button(
                 label="📥 下載全歷史 Excel 報表", data=output,
                 file_name=f"TTPush_戰情室數據匯出_{datetime.datetime.now().strftime('%Y%m%d')}.xlsx",
@@ -382,11 +393,11 @@ with st.sidebar:
     elif nav_tab in ["💰 預算管理", "📞 客服紀錄"]:
         st.info("模組擴充準備中...")
 
-    # --- 底部懸浮版本號 (置中極簡) ---
+    # --- 🌟 V11.10 置底懸浮版本號 (絕不動搖版) ---
     st.markdown(
         """
         <div class="sidebar-footer-sticky">
-            <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.9</span>
+            <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.10</span>
         </div>
         """, 
         unsafe_allow_html=True
