@@ -12,7 +12,7 @@ from github import Github
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
-# 🌟 V11.15 幻影疊加 CSS 魔法 (精準疊加原生 Header)
+# 🌟 V11.16 終極三明治排版 CSS (天地絕對鎖定)
 st.markdown("""
 <style>
 /* 1. 暴力清除 Streamlit 預設的側邊欄內容頂部白邊 */
@@ -20,7 +20,7 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
     padding-top: 0rem !important;
 }
 
-/* 2. 🌟 核心殺手鐧：將標題直接「疊加投影」在原生 Header 區塊上 */
+/* 2. 🔝 頂部標題：疊加在原生 Header 上，絕對不重疊，絕對不滑動 */
 [data-testid="stSidebarHeader"] {
     position: relative !important;
 }
@@ -28,30 +28,45 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
 [data-testid="stSidebarHeader"]::before {
     content: "🎛️ TTPUSH維運控制台";
     position: absolute;
-    left: 1.5rem; /* 對齊側邊欄左側邊距 */
-    top: 50%; /* 垂直置中對齊 */
+    left: 1rem; /* 往左移一點，完美貼齊左側 */
+    top: 50%;
     transform: translateY(-50%);
-    font-size: clamp(1.1rem, 1.5vw + 0.4rem, 1.6rem); /* 動態縮放不破版 */
+    font-size: clamp(1rem, 1.4vw + 0.3rem, 1.5rem); /* 微調大小 */
     font-weight: 800;
     color: inherit;
     letter-spacing: -0.5px;
-    pointer-events: none; /* 讓滑鼠穿透，不影響任何原本的功能 */
-    white-space: nowrap; /* 強制不換行 */
-    max-width: 75%; /* 確保絕對不會覆蓋到右邊的 << 按鈕 */
+    pointer-events: none; 
+    white-space: nowrap; 
+    /* 🚀 防重疊殺手鐧：強制右側留出 3.5rem 的安全距離給 << 按鈕 */
+    right: 3.5rem; 
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* 3. 絕對鎖定底部版本號區塊 */
-.sidebar-footer-sticky {
-    position: sticky;
+/* 3. ⚓ 底部版本號：直接掛載在側邊欄最外層容器，實現真正的絕對鎖定 */
+[data-testid="stSidebar"]::after {
+    content: "台東金幣大數據雲端自動化引擎 v11.16";
+    position: absolute;
     bottom: 0px;
-    background-color: var(--secondary-background-color);
-    z-index: 999;
-    padding-top: 1.5rem;
-    padding-bottom: 2rem;
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
+    left: 0px;
+    width: 100%;
     text-align: center;
-    box-shadow: 0px -15px 15px var(--secondary-background-color);
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    background-color: var(--secondary-background-color);
+    color: #9ca3af;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    z-index: 9999;
+    pointer-events: none;
+    /* 輕微的漸層陰影，讓中間滑動的內容有沒入底部的視覺效果 */
+    box-shadow: 0px -20px 20px -10px var(--secondary-background-color) inset;
+}
+
+/* 4. 確保中間可滑動內容不會被底部版本號遮住，加上足夠的底部留白 */
+[data-testid="stSidebar"] > div:first-child {
+    padding-bottom: 4.5rem !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -107,13 +122,12 @@ def safe_parse_int(val):
 # 3. 🎛️ 左側控制台開發 (以 V11.6 為基底修改)
 # ==========================================
 with st.sidebar:
-    # 移除舊有的 Markdown 標題，交由 CSS ::before 在上方完美疊加
     st.markdown("<br>", unsafe_allow_html=True)
     
     nav_tab = st.radio(
         "請選擇操作情境：",
         options=["👀 戰情首頁", "🔄 週報維護", "💰 預算管理", "📞 客服紀錄"],
-        horizontal=False, # 改回垂直排列，符合截圖設計
+        horizontal=False, 
         label_visibility="collapsed"
     )
     st.markdown("<br>", unsafe_allow_html=True)
@@ -121,7 +135,6 @@ with st.sidebar:
     if nav_tab == "👀 戰情首頁":
         st.info(f"💡 目前戰情室正定錨在：\n\n**{st.session_state.selected_period}**")
         st.markdown("<br>", unsafe_allow_html=True)
-        # 套用專屬藍色標題
         st.markdown('<h4 style="color: #2563eb; font-weight: 800; margin-bottom: 15px;">📥 歷史數據匯出</h4>', unsafe_allow_html=True)
         
         export_records = []
@@ -152,7 +165,7 @@ with st.sidebar:
                 file_name=f"TTPush_戰情室數據匯出_{datetime.datetime.now().strftime('%Y%m%d')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
-                type="primary" # 主色系按鈕
+                type="primary" 
             )
 
     elif nav_tab == "🔄 週報維護":
@@ -385,15 +398,7 @@ with st.sidebar:
     elif nav_tab in ["💰 預算管理", "📞 客服紀錄"]:
         st.info("模組擴充準備中...")
 
-    # --- 置底版本號 ---
-    st.markdown(
-        """
-        <div class="sidebar-footer-sticky">
-            <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.15</span>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+    # (原本寫在這裡的 st.markdown 底部版本號已經刪除，全部由頂部的 CSS ::after 接管！)
 
 # ==========================================
 # 4. 📺 主畫面渲染
