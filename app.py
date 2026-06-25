@@ -12,7 +12,7 @@ from github import Github
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
-# 🌟 V11.8 極簡留白美學 CSS
+# 🌟 V11.9 極簡留白美學 (完美支援亮/暗主題動態切換)
 st.markdown("""
 <style>
 /* 1. 移除 Streamlit 預設的側邊欄上方大片白邊 */
@@ -20,11 +20,11 @@ st.markdown("""
     padding-top: 0rem !important;
 }
 
-/* 2. 懸浮置頂的標題區塊 (無邊框極簡風) */
+/* 2. 懸浮置頂的標題區塊 (使用原生變數完美融入背景) */
 .sidebar-header-sticky {
     position: sticky;
     top: 0px;
-    background-color: #f0f2f6; 
+    background-color: var(--secondary-background-color); 
     z-index: 999;
     padding-top: 2rem;
     padding-bottom: 1rem;
@@ -34,11 +34,11 @@ st.markdown("""
     padding-right: 1.5rem;
 }
 
-/* 3. 懸浮置底的版本資訊區塊 (置中極簡風) */
+/* 3. 懸浮置底的版本資訊區塊 (使用原生變數完美融入背景) */
 .sidebar-footer-sticky {
     position: sticky;
     bottom: 0px;
-    background-color: #f0f2f6;
+    background-color: var(--secondary-background-color);
     z-index: 999;
     padding-top: 1rem;
     padding-bottom: 2rem;
@@ -47,13 +47,6 @@ st.markdown("""
     padding-left: 1.5rem;
     padding-right: 1.5rem;
     text-align: center;
-}
-
-/* 支援深色模式的背景自動切換 */
-@media (prefers-color-scheme: dark) {
-    .sidebar-header-sticky, .sidebar-footer-sticky {
-        background-color: #262730;
-    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -105,7 +98,7 @@ def safe_parse_int(val):
         return None
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (V11.8)
+# 3. 🎛️ 左側控制台開發 (V11.9)
 # ==========================================
 with st.sidebar:
     
@@ -393,7 +386,7 @@ with st.sidebar:
     st.markdown(
         """
         <div class="sidebar-footer-sticky">
-            <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.8</span>
+            <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.9</span>
         </div>
         """, 
         unsafe_allow_html=True
