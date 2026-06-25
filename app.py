@@ -12,45 +12,35 @@ from github import Github
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
-# 🌟 V11.11 頂部空間極致鎖定 CSS
+# 🌟 V11.13 幻影疊加 CSS 魔法 (直接疊加在原生 Header 上)
 st.markdown("""
 <style>
-/* 1. 暴力清除頂部白邊 */
+/* 1. 暴力清除 Streamlit 預設的側邊欄內容頂部白邊 */
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
     padding-top: 0rem !important;
-    padding-bottom: 0rem !important;
 }
 
-/* 2. 絕對鎖定頂部標題區塊 (向上推移至極限) */
-.sidebar-header-sticky {
-    position: sticky;
-    top: 0px;
-    background-color: var(--secondary-background-color); 
-    z-index: 999;
-    /* 大幅減少 padding-top，讓文字進入最頂層區域 */
-    padding-top: 0.5rem; 
-    padding-bottom: 0.8rem;
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+/* 2. 🌟 核心殺手鐧：將標題直接「疊加投影」在原生 Header 區塊上 */
+[data-testid="stSidebarHeader"] {
+    position: relative !important;
 }
 
-/* 標題字體自適應與防重疊 */
-.sidebar-title-text {
-    margin: 0;
+[data-testid="stSidebarHeader"]::before {
+    content: "🎛️ TTPUSH維運控制台";
+    position: absolute;
+    left: 1.5rem; /* 對齊側邊欄左側邊距 */
+    top: 50%; /* 垂直置中對齊 */
+    transform: translateY(-50%);
+    font-size: clamp(1.1rem, 1.5vw + 0.4rem, 1.6rem); /* 動態縮放不破版 */
     font-weight: 800;
     color: inherit;
     letter-spacing: -0.5px;
-    /* 保留右側空間給 << 按鈕 */
-    max-width: 82%; 
-    font-size: clamp(1.1rem, 1.6vw + 0.4rem, 1.65rem);
-    line-height: 1.2;
-    display: flex;
-    align-items: center;
+    pointer-events: none; /* 讓滑鼠穿透，不影響任何原本的功能 */
+    white-space: nowrap; /* 強制不換行 */
+    max-width: 75%; /* 確保絕對不會覆蓋到右邊的 << 按鈕 */
 }
 
-/* 3. 絕對鎖定底部版本號 */
+/* 3. 絕對鎖定底部版本號區塊 */
 .sidebar-footer-sticky {
     position: sticky;
     bottom: 0px;
@@ -74,7 +64,7 @@ if os.path.exists(CSS_PATH):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ==========================================
-# 2. 🧠 資料庫初始化
+# 2. 🧠 資料庫雙大腦初始化
 # ==========================================
 JSON_FILE = os.path.join(BASE_DIR, "metrics_history.json")
 BAK_FILE = os.path.join(BASE_DIR, "metrics_history.json.bak")
@@ -113,20 +103,11 @@ def safe_parse_int(val):
         return None
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (V11.11)
+# 3. 🎛️ 左側控制台開發 (V11.13)
 # ==========================================
 with st.sidebar:
     
-    # --- 🌟 V11.11 極致上移標題 ---
-    st.markdown(
-        """
-        <div class="sidebar-header-sticky">
-            <h2 class="sidebar-title-text">🎛️ TTPUSH維運控制台</h2>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
-    
+    # 📝 注意：這裡原本的 title 標題代碼已經完全刪除，交由 CSS 完美投影疊加！
     st.markdown("<br>", unsafe_allow_html=True)
     
     nav_tab = st.radio(
@@ -226,6 +207,7 @@ with st.sidebar:
                                 elif col0 == "民眾使用情況": redeemed = parsed_val
                             
                             row_str = "||".join([str(c) for c in row])
+                            
                             is_exp26 = any(d in row_str for d in ["2026/09/30", "2026/9/30", "2026-09-30", "2026-9-30", "115/09/30", "115-09-30"])
                             is_exp27 = any(d in row_str for d in ["2027/09/30", "2027/9/30", "2027-09-30", "2027-9-30", "116/09/30", "116-09-30"])
                             
@@ -325,18 +307,28 @@ with st.sidebar:
                     DATA_ENGINE[st.session_state.selected_period]["k4_metrics"]["expire_20270930_coins"] = new_exp27
                     
                     updated_json_str = json.dumps(DATA_ENGINE, ensure_ascii=False, indent=4)
-                    with open(JSON_FILE, "w", encoding="utf-8") as f: f.write(updated_json_str)
+                    
+                    with open(JSON_FILE, "w", encoding="utf-8") as f: 
+                        f.write(updated_json_str)
                     
                     if "GITHUB_TOKEN" in st.secrets and "GITHUB_REPO" in st.secrets:
                         try:
-                            with st.spinner("同步至雲端中..."):
+                            with st.spinner("正在將資料安全同步至雲端 GitHub..."):
                                 g = Github(st.secrets["GITHUB_TOKEN"])
                                 repo = g.get_repo(st.secrets["GITHUB_REPO"])
                                 contents = repo.get_contents("metrics_history.json")
-                                repo.update_file(contents.path, f"更新：{st.session_state.selected_period}", updated_json_str, contents.sha)
+                                repo.update_file(
+                                    contents.path,
+                                    f"TTPush 自動更新：{st.session_state.selected_period}",
+                                    updated_json_str,
+                                    contents.sha
+                                )
                             st.success("✅ 雲端資料庫同步成功！")
                         except Exception as e:
-                            st.error(f"❌ 同步失敗：{e}")
+                            st.error(f"❌ 雲端同步失敗，請檢查權限設定：{e}")
+                    else:
+                        st.info("ℹ️ 未偵測到 GitHub 金鑰，僅儲存於本地端。")
+                        
                     time.sleep(1.5)
                     st.rerun()
 
@@ -370,7 +362,7 @@ with st.sidebar:
     st.markdown(
         """
         <div class="sidebar-footer-sticky">
-            <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.11</span>
+            <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.13</span>
         </div>
         """, 
         unsafe_allow_html=True
@@ -382,7 +374,6 @@ with st.sidebar:
 if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # 隱藏原生 Selectbox
     st.markdown("""<style>section[data-testid="stMain"] div[data-testid="stSelectbox"] { margin-top: -60px !important; opacity: 0 !important; z-index: 999 !important; cursor: pointer !important; }</style>""", unsafe_allow_html=True)
 
     st.markdown(f"""<div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px;"><div class="morandi-static-capsule">{st.session_state.selected_period}</div></div>""", unsafe_allow_html=True)
@@ -395,7 +386,6 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "80,681,000"})
     k4_d = current_data.get("k4_metrics", {})
 
-    # 數據轉算與卡片渲染 (維持原樣)
     t_users_str = f"{int(k1_d.get('actual_total_users', 0)):,}"
     w_users_str = f"{int(k1_d.get('derived_weekly_new_users', 0)):,}"
     t_push_str = f"{int(k1_d.get('total_push_accumulated', 0)):,}"
@@ -412,8 +402,6 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
     with k1: st.markdown(f'<div class="unified-card k1-card"><div class="card-section-top"><span class="card-label">累積會員總數</span><div class="hero-val-wrapper"><span class="hero-value">{t_users_str}</span><span class="unit">人</span></div><div class="growth-tag">▲ 本週新增 +{w_users_str} 人</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">推播統計</span><div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div><div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div></div></div>', unsafe_allow_html=True)
     with k2: st.markdown(f'<div class="unified-card k2-card"><div class="card-section-top"><span class="card-label">當週指標</span><div class="app-list-item" style="margin-top: 8px;">✨ 當週發放：<span class="data-bold">{w_issued_str}</span> 枚</div><div class="app-list-item">🎁 當週兌換：<span class="data-bold">{w_redeemed_str}</span> 枚</div><div class="app-list-item">💲 消費店家：<span class="data-bold">{active_stores_str}</span> 家</div><div class="app-list-item">🏪 總特約店：<span class="data-bold">{total_stores_str}</span> 家</div><div class="app-list-item">📈 新增店家：<span class="data-bold">+{new_stores_str}</span> 家</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">臺東金幣總發放數</span><div class="hero-val-wrapper"><span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span></div><div class="section-note-bottom">累積自 110/01/01 起算</div></div></div>', unsafe_allow_html=True)
-    # ... 其餘 K3, K4 卡片邏輯與 V11.10 相同
-    # (為節省空間，此處略過重複代碼，但完整覆寫時內容均在)
     with k3:
         b110_val, b111_val, b112_val, b113_val, b114_val, b115_val = k3_d.get('b110','176,839,060'), k3_d.get('b111','67,113,280'), k3_d.get('b112','66,302,010'), k3_d.get('b113','104,541,785'), k3_d.get('b114','82,390,693'), k3_d.get('b115','80,681,000')
         def parse_b(v): return int(str(v).replace(',', '').strip() or 0)
