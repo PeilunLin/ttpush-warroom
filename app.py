@@ -12,65 +12,7 @@ from github import Github
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
-# 🌟 V11.16 終極三明治排版 CSS (天地絕對鎖定)
-st.markdown("""
-<style>
-/* 1. 暴力清除 Streamlit 預設的側邊欄內容頂部白邊 */
-section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-    padding-top: 0rem !important;
-}
-
-/* 2. 🔝 頂部標題：疊加在原生 Header 上，絕對不重疊，絕對不滑動 */
-[data-testid="stSidebarHeader"] {
-    position: relative !important;
-}
-
-[data-testid="stSidebarHeader"]::before {
-    content: "🎛️ TTPUSH維運控制台";
-    position: absolute;
-    left: 1rem; /* 往左移一點，完美貼齊左側 */
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: clamp(1rem, 1.4vw + 0.3rem, 1.5rem); /* 微調大小 */
-    font-weight: 800;
-    color: inherit;
-    letter-spacing: -0.5px;
-    pointer-events: none; 
-    white-space: nowrap; 
-    /* 🚀 防重疊殺手鐧：強制右側留出 3.5rem 的安全距離給 << 按鈕 */
-    right: 3.5rem; 
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* 3. ⚓ 底部版本號：直接掛載在側邊欄最外層容器，實現真正的絕對鎖定 */
-[data-testid="stSidebar"]::after {
-    content: "台東金幣大數據雲端自動化引擎 v11.16";
-    position: absolute;
-    bottom: 0px;
-    left: 0px;
-    width: 100%;
-    text-align: center;
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
-    background-color: var(--secondary-background-color);
-    color: #9ca3af;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    z-index: 9999;
-    pointer-events: none;
-    /* 輕微的漸層陰影，讓中間滑動的內容有沒入底部的視覺效果 */
-    box-shadow: 0px -20px 20px -10px var(--secondary-background-color) inset;
-}
-
-/* 4. 確保中間可滑動內容不會被底部版本號遮住，加上足夠的底部留白 */
-[data-testid="stSidebar"] > div:first-child {
-    padding-bottom: 4.5rem !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
+# 移除高風險的 CSS 綁架，回歸原生穩定渲染
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CSS_PATH = os.path.join(BASE_DIR, "style.css")
@@ -119,9 +61,11 @@ def safe_parse_int(val):
         return None
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (以 V11.6 為基底修改)
+# 3. 🎛️ 左側控制台開發 (V11.17 穩定回歸版)
 # ==========================================
 with st.sidebar:
+    # 實體渲染標題 (保證顯示)
+    st.markdown('<h2 style="margin:0; font-weight: 800; letter-spacing: -0.5px;">🎛️ TTPUSH維運控制台</h2>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
     
     nav_tab = st.radio(
@@ -135,6 +79,7 @@ with st.sidebar:
     if nav_tab == "👀 戰情首頁":
         st.info(f"💡 目前戰情室正定錨在：\n\n**{st.session_state.selected_period}**")
         st.markdown("<br>", unsafe_allow_html=True)
+        # 套用專屬藍色標題
         st.markdown('<h4 style="color: #2563eb; font-weight: 800; margin-bottom: 15px;">📥 歷史數據匯出</h4>', unsafe_allow_html=True)
         
         export_records = []
@@ -255,6 +200,7 @@ with st.sidebar:
                         actual_total_push = int(prev_k1.get("total_push_accumulated", 0)) + new_push_input
                         actual_total_stores = int(prev_k2.get("total_stores_accumulated", 679)) + new_stores_input
                         
+                        # 🌟 V11.6 邏輯：發放金幣 = 報表數字 + 錢包調整數字
                         adjusted_issued = issued + wallet_adj_input
 
                         DATA_ENGINE[period_key] = {
@@ -398,7 +344,16 @@ with st.sidebar:
     elif nav_tab in ["💰 預算管理", "📞 客服紀錄"]:
         st.info("模組擴充準備中...")
 
-    # (原本寫在這裡的 st.markdown 底部版本號已經刪除，全部由頂部的 CSS ::after 接管！)
+    # 實體渲染底部版本號 (保證顯示)
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="text-align: center; color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">
+            台東金幣大數據雲端自動化引擎 v11.17
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
 
 # ==========================================
 # 4. 📺 主畫面渲染
