@@ -8,11 +8,11 @@ import time
 from github import Github 
 
 # ==========================================
-# 1. 🌐 全域設定與 CSS 載入 (包含 V11.7 側邊欄懸浮排版)
+# 1. 🌐 全域設定與 CSS 載入
 # ==========================================
 st.set_page_config(page_title="TTPush 戰情室", layout="wide", initial_sidebar_state="collapsed")
 
-# 🌟 V11.7 側邊欄專屬 CSS 魔法
+# 🌟 V11.8 極簡留白美學 CSS
 st.markdown("""
 <style>
 /* 1. 移除 Streamlit 預設的側邊欄上方大片白邊 */
@@ -20,35 +20,33 @@ st.markdown("""
     padding-top: 0rem !important;
 }
 
-/* 2. 懸浮置頂的標題區塊 (Title) */
+/* 2. 懸浮置頂的標題區塊 (無邊框極簡風) */
 .sidebar-header-sticky {
     position: sticky;
     top: 0px;
-    background-color: #f0f2f6; /* 配合淺色模式側邊欄背景 */
+    background-color: #f0f2f6; 
     z-index: 999;
-    padding-top: 1.5rem;
+    padding-top: 2rem;
     padding-bottom: 1rem;
     margin-left: -1.5rem;
     margin-right: -1.5rem;
     padding-left: 1.5rem;
     padding-right: 1.5rem;
-    border-bottom: 2px dashed rgba(128, 128, 128, 0.4); /* 參考圖示的灰色虛線 */
 }
 
-/* 3. 懸浮置底的版本資訊區塊 (Footer) */
+/* 3. 懸浮置底的版本資訊區塊 (置中極簡風) */
 .sidebar-footer-sticky {
     position: sticky;
     bottom: 0px;
     background-color: #f0f2f6;
     z-index: 999;
     padding-top: 1rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 2rem;
     margin-left: -1.5rem;
     margin-right: -1.5rem;
     padding-left: 1.5rem;
     padding-right: 1.5rem;
-    border-top: 2px dashed rgba(128, 128, 128, 0.4);
-    text-align: left;
+    text-align: center;
 }
 
 /* 支援深色模式的背景自動切換 */
@@ -59,7 +57,6 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -108,15 +105,15 @@ def safe_parse_int(val):
         return None
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (V11.7)
+# 3. 🎛️ 左側控制台開發 (V11.8)
 # ==========================================
 with st.sidebar:
     
-    # --- 🌟 V11.7 固定在頂部的標題區塊 ---
+    # --- 頂部懸浮標題 ---
     st.markdown(
         """
         <div class="sidebar-header-sticky">
-            <h2 style="margin:0; font-size: 1.6rem; font-weight: 800; color: inherit; letter-spacing: -0.5px;">🎛️ TTPush 運維控制台</h2>
+            <h2 style="margin:0; font-size: 1.65rem; font-weight: 800; color: inherit; letter-spacing: -0.5px;">🎛️ TTPUSH維運控制台</h2>
         </div>
         """, 
         unsafe_allow_html=True
@@ -127,14 +124,21 @@ with st.sidebar:
     nav_tab = st.radio(
         "請選擇操作情境：",
         options=["👀 戰情首頁", "🔄 週報維護", "💰 預算管理", "📞 客服紀錄"],
-        horizontal=False, # 調整為垂直比較有側邊欄選單的感覺
+        horizontal=False,
         label_visibility="collapsed"
     )
+    
     st.markdown("<br>", unsafe_allow_html=True)
     
     if nav_tab == "👀 戰情首頁":
-        st.info(f"💡 目前戰情室正定錨在：\n**{st.session_state.selected_period}**")
-        st.markdown("#### 📥 歷史數據匯出")
+        # 完美復刻的 Info Box
+        st.info(f"💡 目前戰情室正定錨在：\n\n**{st.session_state.selected_period}**")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # 專屬藍色大標題
+        st.markdown('<h4 style="color: #2563eb; font-weight: 800; margin-bottom: 15px;">📥 歷史數據匯出</h4>', unsafe_allow_html=True)
+        
         export_records = []
         for period, data in DATA_ENGINE.items():
             row = {"統計區間": period}
@@ -158,6 +162,8 @@ with st.sidebar:
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df_export.to_excel(writer, index=False, sheet_name='TTPush歷史數據')
             output.seek(0)
+            
+            # 主色按鈕
             st.download_button(
                 label="📥 下載全歷史 Excel 報表", data=output,
                 file_name=f"TTPush_戰情室數據匯出_{datetime.datetime.now().strftime('%Y%m%d')}.xlsx",
@@ -177,9 +183,6 @@ with st.sidebar:
         
         default_raw_users = max(0, int(prev_k1.get("actual_total_users", 40627)) - 40627)
 
-        # ==========================================
-        # 【視覺第一層】預設展開：日常最高頻率操作
-        # ==========================================
         st.markdown("### 📥 步驟一：參數設定與載入")
         
         with st.container(border=True):
@@ -285,9 +288,6 @@ with st.sidebar:
                 else:
                     st.warning("⚠️ 請務必同時上傳「綜合報表」與「交易紀錄」！")
 
-        # ==========================================
-        # 【視覺第二層】預設折疊：手動微調與同步區
-        # ==========================================
         st.markdown("---")
         st.markdown("### 🛠️ 步驟二：審核與同步")
         
@@ -347,9 +347,6 @@ with st.sidebar:
                     time.sleep(1.5)
                     st.rerun()
 
-        # ==========================================
-        # 【視覺第三層】Danger Zone：危險操作防護區
-        # ==========================================
         st.markdown("---")
         st.markdown("#### 🚨 Danger Zone")
         with st.expander("🗑️ 刪除當期數據 (無法復原)", expanded=False):
@@ -392,11 +389,11 @@ with st.sidebar:
     elif nav_tab in ["💰 預算管理", "📞 客服紀錄"]:
         st.info("模組擴充準備中...")
 
-    # --- 🌟 V11.7 固定在底部的版本資訊區塊 ---
+    # --- 底部懸浮版本號 (置中極簡) ---
     st.markdown(
         """
         <div class="sidebar-footer-sticky">
-            <span style="color: gray; font-size: 0.85rem; font-weight: 500;">台東金幣大數據雲端自動化引擎 v11.7</span>
+            <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.8</span>
         </div>
         """, 
         unsafe_allow_html=True
