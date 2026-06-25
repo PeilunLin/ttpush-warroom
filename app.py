@@ -60,11 +60,11 @@ def safe_parse_int(val):
         return None
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (V11.5 SaaS 美化排版)
+# 3. 🎛️ 左側控制台開發 (V11.6 營運校正版)
 # ==========================================
 with st.sidebar:
     st.markdown("## 🎛️ TTPush 運維控制台")
-    st.caption("台東金幣大數據雲端自動化引擎 v11.5")
+    st.caption("台東金幣大數據雲端自動化引擎 v11.6")
     st.markdown("---")
     
     nav_tab = st.radio(
@@ -133,7 +133,13 @@ with st.sidebar:
                 raw_users_input = st.number_input("👤 後台會員總數", min_value=0, step=1, value=default_raw_users)
             with col_p2:
                 new_push_input = st.number_input("🚀 本週新增推播", min_value=0, step=1, value=0)
-            new_stores_input = st.number_input("📈 本週新增特約店家", min_value=0, step=1, value=0)
+            
+            # 🌟 V11.6 新增：當週會員錢包調整 (與新增店家並排)
+            col_p3, col_p4 = st.columns(2)
+            with col_p3:
+                new_stores_input = st.number_input("📈 本週新增特約店家", min_value=0, step=1, value=0)
+            with col_p4:
+                wallet_adj_input = st.number_input("💰 當週會員錢包調整", step=1, value=0, help="正值為補發/匯入，負值為扣除/回收")
 
         # 報表上傳區
         st.markdown("##### 📁 報表匯入")
@@ -192,6 +198,9 @@ with st.sidebar:
                         derived_new_users = actual_users - int(prev_k1.get("actual_total_users", actual_users))
                         actual_total_push = int(prev_k1.get("total_push_accumulated", 0)) + new_push_input
                         actual_total_stores = int(prev_k2.get("total_stores_accumulated", 679)) + new_stores_input
+                        
+                        # 🌟 V11.6 邏輯：發放金幣 = 報表數字 + 錢包調整數字
+                        adjusted_issued = issued + wallet_adj_input
 
                         DATA_ENGINE[period_key] = {
                             "k1_metrics": {
@@ -201,11 +210,11 @@ with st.sidebar:
                                 "weekly_push_current": new_push_input
                             },
                             "k2_metrics": {
-                                "weekly_coins_issued": issued,
+                                "weekly_coins_issued": adjusted_issued,
                                 "weekly_coins_redeemed_audited": redeemed,
                                 "active_stores_count": active_stores,
                                 "new_stores_adjusted": new_stores_input,
-                                "total_accumulated_coins": int(prev_k2.get("total_accumulated_coins", 0)) + issued,
+                                "total_accumulated_coins": int(prev_k2.get("total_accumulated_coins", 0)) + adjusted_issued,
                                 "total_stores_accumulated": actual_total_stores
                             },
                             "k3_metrics": prev_k3,
@@ -233,7 +242,6 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("### 🛠️ 步驟二：審核與同步")
         
-        # 運用 expander 實現漸進式揭露
         with st.expander("⚙️ 進階：手動數據微調與雲端同步", expanded=False):
             cur_data = DATA_ENGINE.get(st.session_state.selected_period, {})
             cur_k1, cur_k2, cur_k4 = cur_data.get("k1_metrics", {}), cur_data.get("k2_metrics", {}), cur_data.get("k4_metrics", {})
@@ -253,7 +261,6 @@ with st.sidebar:
                 with col_e1: new_exp26 = st.number_input("⏳ 2026到期", value=int(cur_k4.get("expire_20260930_coins", 0)), step=1)
                 with col_e2: new_exp27 = st.number_input("⏳ 2027到期", value=int(cur_k4.get("expire_20270930_coins", 0)), step=1)
                 
-                # 同步按鈕設為 Primary，作為視覺重心
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.form_submit_button("💾 儲存並同步至雲端", type="primary"):
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["weekly_push_current"] = new_w_push
