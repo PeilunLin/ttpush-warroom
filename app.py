@@ -538,7 +538,7 @@ elif nav_tab == "💰 預算管理":
     st.caption("台東金幣 Apps Script 零成本微型伺服器版 v11.21")
     
     # 🌟 請把剛剛複製的長網址貼在這裡的引號裡面 👇
-    API_URL = "https://script.google.com/macros/s/https://script.google.com/a/macros/dotdot.cc/s/AKfycbwpVyokJqFK8tB6U6RS0fX70voQ_ro1RMtF4PRVtq5hRVwziqkY9VeUOYwrXHPnWrM0dg/exec/exec"
+    API_URL = "https://script.google.com/macros/s/https://script.google.com/a/macros/dotdot.cc/s/AKfycbwpVyokJqFK8tB6U6RS0fX70voQ_ro1RMtF4PRVtq5hRVwziqkY9VeUOYwrXHPnWrM0dg/exec"
     
     # --- 定義雙向拋接的大腦 ---
     def fetch_sheet(sheet_name):
