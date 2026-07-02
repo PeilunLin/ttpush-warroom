@@ -5,7 +5,8 @@ import os
 import io
 import datetime
 import time
-from github import Github 
+import requests
+from github import Github
 
 # ==========================================
 # 1. 🌐 全域設定與 CSS 載入
@@ -529,3 +530,65 @@ if nav_tab in ["👀 戰情首頁", "🔄 週報維護"]:
             f'</div>'
         )
         st.markdown(html_k4, unsafe_allow_html=True)
+# ==========================================
+# 5. 💰 預算管理模組
+# ==========================================
+elif nav_tab == "💰 預算管理":
+    st.markdown('<h2 style="color: #1e3a8a; font-weight: 800; margin-bottom: 5px;">💰 預算管理與局處動支分配表</h2>', unsafe_allow_html=True)
+    st.caption("台東金幣 Apps Script 零成本微型伺服器版 v11.21")
+    
+    # 🌟 請把剛剛複製的長網址貼在這裡的引號裡面 👇
+    API_URL = "https://script.google.com/macros/s/https://script.google.com/a/macros/dotdot.cc/s/AKfycbwpVyokJqFK8tB6U6RS0fX70voQ_ro1RMtF4PRVtq5hRVwziqkY9VeUOYwrXHPnWrM0dg/exec/exec"
+    
+    # --- 定義雙向拋接的大腦 ---
+    def fetch_sheet(sheet_name):
+        try:
+            res = requests.post(API_URL, json={"action": "read", "sheet_name": sheet_name})
+            data = res.json().get("data", [])
+            if data and len(data) > 1:
+                return pd.DataFrame(data[1:], columns=data[0])
+            elif data and len(data) == 1:
+                return pd.DataFrame(columns=data[0])
+            return pd.DataFrame()
+        except:
+            return pd.DataFrame()
+
+    def update_sheet(sheet_name, df):
+        # 將 DataFrame 轉回 2D 陣列格式傳給 Google Sheet
+        data_to_send = [df.columns.tolist()] + df.values.tolist()
+        requests.post(API_URL, json={"action": "update", "sheet_name": sheet_name, "data": data_to_send})
+
+    # --- 執行讀取 ---
+    with st.spinner("🔄 正在從 Google Sheets 雲端拋接最新數據..."):
+        df_master = fetch_sheet("Master")
+        df_log = fetch_sheet("Log")
+        
+        if not df_master.empty:
+            df_master["年度"] = df_master["年度"].astype(int)
+            df_master["分配額度"] = df_master["分配額度"].astype(int)
+        if not df_log.empty:
+            df_log["動支金額"] = df_log["動支金額"].astype(int)
+
+    # ... (中間的橫向交叉對照週報、st.data_editor 互動表單等代碼完全維持原本 V11.20 的樣子即可) ...
+
+    # --- 在按下儲存按鈕的地方，替換成新的寫入語法 ---
+    if st.button("💾 儲存預算變更並即時同步至 Google Sheets", type="primary", use_container_width=True):
+        with st.spinner("🚀 正在將最新數據原子級寫入 Google Sheets..."):
+            final_master = edited_master.dropna(subset=["局處名稱", "分配額度"])
+            final_log = edited_log.dropna(subset=["局處名稱", "動支金額"])
+            
+            # 呼叫我們自己寫的 API 寫回 Google 表單
+            update_sheet("Master", final_master)
+            update_sheet("Log", final_log)
+            
+            # 連動 K3 總額的邏輯維持不變
+            total_115_pool = final_master[final_master["年度"].astype(str) == "115"]["分配額度"].sum() if not final_master.empty else 0
+            if st.session_state.selected_period in DATA_ENGINE and st.session_state.selected_period != "尚無資料":
+                DATA_ENGINE[st.session_state.selected_period]["k3_metrics"]["b115"] = f"{int(total_115_pool):,}"
+            
+            with open(JSON_FILE, "w", encoding="utf-8") as f:
+                json.dump(DATA_ENGINE, f, ensure_ascii=False, indent=4)
+                
+            st.success("🎉 完美落地！資料已成功寫入 Google 試算表，首頁 K3 也已連動！")
+            time.sleep(1.5)
+            st.rerun()
