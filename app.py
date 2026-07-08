@@ -314,7 +314,6 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
 # ==========================================
 elif nav_tab == "💰 預算管理":
     st.markdown('<h2 style="color: #1e3a8a; font-weight: 800; margin-bottom: 5px;">💰 預算管理與局處動支分配表</h2>', unsafe_allow_html=True)
-    st.caption("台東金幣 Apps Script 零成本微型伺服器版 v11.21")
     
     # 🌟 已經修復網址重疊的錯誤！這是您的專屬正確網址
     API_URL = "https://script.google.com/a/macros/dotdot.cc/s/AKfycbwpVyokJqFK8tB6U6RS0fX70voQ_ro1RMtF4PRVtq5hRVwziqkY9VeUOYwrXHPnWrM0dg/exec"
