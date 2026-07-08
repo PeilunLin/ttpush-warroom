@@ -62,7 +62,7 @@ def safe_parse_int(val):
         return None
 
 # ==========================================
-# 3. 🎛️ 左側控制台開發 (V11.17 穩定回歸版)
+# 3. 🎛️ 左側控制台開發
 # ==========================================
 with st.sidebar:
     st.markdown('<h2 style="margin:0; font-weight: 800; letter-spacing: -0.5px;">🎛️ TTPUSH維運控制台</h2>', unsafe_allow_html=True)
@@ -261,7 +261,7 @@ with st.sidebar:
         st.info("模組擴充準備中...")
 
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("""<div style="text-align: center; color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.21</div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="text-align: center; color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.22</div>""", unsafe_allow_html=True)
 
 
 # ==========================================
@@ -310,10 +310,11 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     with k4: st.markdown(f'<div class="unified-card k4-card"><div class="card-section-top"><span class="card-label">⚠️ 金幣到期預警</span><div class="expire-list-container"><div class="expire-row"><span class="expire-date">2026/09/30 到期</span><div class="expire-val-wrapper"><span class="expire-number">{exp26_str}</span><span class="expire-unit">枚</span></div></div><div class="expire-row"><span class="expire-date">2027/09/30 到期</span><div class="expire-val-wrapper"><span class="expire-number">{exp27_str}</span><span class="expire-unit">枚</span></div></div></div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">📢 營運備註整理</span><ul class="ops-notes"><li><span class="note-tag">維護</span>114/06/04 因 4.0 上線系統關閉維護</li><li><span class="note-tag">封測</span>114/06/23-27 進行 4.0 核心封測</li><li><span class="note-tag">推播</span>113/09/25-11/06 暫停金幣推播</li><li><span class="note-tag">對象</span>推播含所有用戶及縣民群組</li><li><span class="note-tag">基準</span>金幣統計自 110/01/01 起算</li></ul></div></div>', unsafe_allow_html=True)
 
 # ==========================================
-# 5. 💰 預算管理模組 (V11.21 Apps Script 微型伺服器版)
+# 5. 💰 預算管理模組 (三層式架構 CRUD 核心)
 # ==========================================
 elif nav_tab == "💰 預算管理":
     st.markdown('<h2 style="color: #1e3a8a; font-weight: 800; margin-bottom: 5px;">💰 預算管理與局處動支分配表</h2>', unsafe_allow_html=True)
+    st.caption("台東金幣 Apps Script 零成本微型伺服器版 v11.22 (支援計畫名稱獨立核算)")
     
     # 🌟 已經修復網址重疊的錯誤！這是您的專屬正確網址
     API_URL = "https://script.google.com/a/macros/dotdot.cc/s/AKfycbwpVyokJqFK8tB6U6RS0fX70voQ_ro1RMtF4PRVtq5hRVwziqkY9VeUOYwrXHPnWrM0dg/exec"
@@ -337,70 +338,69 @@ elif nav_tab == "💰 預算管理":
         requests.post(API_URL, json={"action": "update", "sheet_name": sheet_name, "data": data_to_send})
 
     # --- 執行讀取 ---
-    with st.spinner("🔄 正在從 Google Sheets 雲端拋接最新數據..."):
+    with st.spinner("🔄 正在從 Google Sheets 雲端拋接最新三層式數據..."):
         df_master = fetch_sheet("Master")
         df_log = fetch_sheet("Log")
         
-        # 確保資料格式正確，避免空表引發錯誤
+        # 確保資料格式正確，定義包含「計畫名稱」的欄位結構
         if not df_master.empty:
             df_master["年度"] = df_master["年度"].astype(int)
             df_master["分配額度"] = df_master["分配額度"].astype(int)
         else:
-            df_master = pd.DataFrame(columns=["年度", "局處名稱", "預算類別", "分配額度"])
+            df_master = pd.DataFrame(columns=["年度", "局處名稱", "預算類別", "計畫名稱", "分配額度"])
 
         if not df_log.empty:
             df_log["動支金額"] = df_log["動支金額"].astype(int)
         else:
-            df_log = pd.DataFrame(columns=["日期", "局處名稱", "預算類別", "用途說明", "動支金額"])
+            df_log = pd.DataFrame(columns=["日期", "局處名稱", "預算類別", "計畫名稱", "用途說明", "動支金額"])
 
-    # 🌟 補回剛剛消失的 UI 介面代碼
-    all_depts = sorted(list(set(df_master["局處名稱"].tolist() + df_log["局處名稱"].tolist()))) if not df_master.empty or not df_log.empty else []
-    
+    # 🌟 建立精準的三層式視覺化週報運算邏輯
     report_rows = []
-    for dept in all_depts:
-        m_orig = df_master[(df_master["局處名稱"] == dept) & (df_master["預算類別"] == "原始分配")]["分配額度"].sum() if not df_master.empty else 0
-        l_orig = df_log[(df_log["局處名稱"] == dept) & (df_log["預算類別"] == "原始分配")]["動支金額"].sum() if not df_log.empty else 0
-        r_orig = m_orig - l_orig
-        
-        m_proj = df_master[(df_master["局處名稱"] == dept) & (df_master["預算類別"] == "計畫型預算")]["分配額度"].sum() if not df_master.empty else 0
-        l_proj = df_log[(df_log["局處名稱"] == dept) & (df_log["預算類別"] == "計畫型預算")]["動支金額"].sum() if not df_log.empty else 0
-        r_proj = m_proj - l_proj
-        
-        report_rows.append({
-            "局處名稱": dept,
-            "原始分配-核定額度": int(m_orig),
-            "原始分配-已動支": int(l_orig),
-            "原始分配-可用餘額": int(r_orig),
-            "計畫型預算-核定額度": int(m_proj),
-            "計畫型預算-已動支": int(l_proj),
-            "計畫型預算-可用餘額": int(r_proj),
-            "總可用餘額(合計)": int(r_orig + r_proj)
-        })
-        
-    df_weekly_report = pd.DataFrame(report_rows) if report_rows else pd.DataFrame(
-        columns=["局處名稱", "原始分配-核定額度", "原始分配-已動支", "原始分配-可用餘額", "計畫型預算-核定額度", "計畫型預算-已動支", "計畫型預算-可用餘額", "總可用餘額(合計)"]
-    )
+    if not df_master.empty:
+        for idx, row in df_master.iterrows():
+            dept = row["局處名稱"]
+            b_type = row["預算類別"]
+            proj = row["計畫名稱"]
+            allocated = int(row["分配額度"])
+            
+            # 精準對應局處、預算類別與計畫名稱來扣款
+            if not df_log.empty:
+                spent = df_log[(df_log["局處名稱"] == dept) & 
+                               (df_log["預算類別"] == b_type) & 
+                               (df_log["計畫名稱"] == proj)]["動支金額"].sum()
+            else:
+                spent = 0
+            
+            report_rows.append({
+                "局處名稱": dept,
+                "預算類別": b_type,
+                "計畫名稱": proj,
+                "核定額度": allocated,
+                "已動支": int(spent),
+                "可用餘額": allocated - int(spent)
+            })
+            
+    df_weekly_report = pd.DataFrame(report_rows) if report_rows else pd.DataFrame(columns=["局處名稱", "預算類別", "計畫名稱", "核定額度", "已動支", "可用餘額"])
 
-    tab1, tab2, tab3 = st.tabs(["📊 局處額度總表 (每週報表匯出)", "⚙️ 總分配設定 (Master)", "✍️ 動支流水帳 (Log)"])
+    tab1, tab2, tab3 = st.tabs(["📊 計畫額度總表 (精準核算)", "⚙️ 總分配設定 (Master)", "✍️ 動支流水帳 (Log)"])
     
     with tab1:
-        st.markdown("#### 🏢 復刻版週報：各局處雙水庫額度動支對照表")
-        st.caption("即時連動 Google Sheets 最新帳目。左半邊計算原始預算，右半邊計算計畫型預算，相互獨立不混淆。")
+        st.markdown("#### 🏢 各局處專案計畫可用餘額總表")
+        st.caption("系統已自動依據「局處 ➡️ 預算類別 ➡️ 計畫名稱」為您精準對齊並計算剩餘額度。")
         
         if not df_weekly_report.empty:
             df_display = df_weekly_report.copy()
-            for col in df_display.columns:
-                if col != "局處名稱":
-                    df_display[col] = df_display[col].apply(lambda x: f"{x:,}")
+            for col in ["核定額度", "已動支", "可用餘額"]:
+                df_display[col] = df_display[col].apply(lambda x: f"{x:,}")
             
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_weekly_report.to_excel(writer, index=False, sheet_name='局處可用餘額週報')
+                df_weekly_report.to_excel(writer, index=False, sheet_name='計畫可用餘額表')
             output.seek(0)
             
             st.download_button(
-                label="📥 一鍵下載本週局處報表 (Excel)", data=output,
-                file_name=f"TTPush_局處可用餘額週報_{datetime.datetime.now().strftime('%Y%m%d')}.xlsx",
+                label="📥 一鍵下載本週最新計畫報表 (Excel)", data=output,
+                file_name=f"TTPush_專案預算可用餘額表_{datetime.datetime.now().strftime('%Y%m%d')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 type="primary",
                 use_container_width=True
@@ -411,8 +411,8 @@ elif nav_tab == "💰 預算管理":
             st.warning("目前雲端試算表尚無任何預算設定資料，請至「總分配設定」分頁建立。")
 
     with tab2:
-        st.markdown("#### ⚙️ 編輯：年度總預算與局處核定分配池")
-        st.caption("雙擊欄位可修改數值，可在最下方表格空白列直接打字新增局處。")
+        st.markdown("#### ⚙️ 編輯：年度總預算與計畫核定分配池")
+        st.caption("雙擊欄位可修改數值，可在最下方表格空白列直接打字新增計畫。")
         edited_master = st.data_editor(
             df_master, 
             num_rows="dynamic", 
@@ -421,6 +421,7 @@ elif nav_tab == "💰 預算管理":
                 "年度": st.column_config.NumberColumn("年度", required=True, format="%d"),
                 "局處名稱": st.column_config.TextColumn("局處名稱", required=True),
                 "預算類別": st.column_config.SelectboxColumn("預算類別", options=["原始分配", "計畫型預算"], required=True),
+                "計畫名稱": st.column_config.TextColumn("計畫名稱 (用於精準扣款)", required=True),
                 "分配額度": st.column_config.NumberColumn("分配額度 (金幣數)", required=True, min_value=0)
             },
             key="editor_master"
@@ -428,15 +429,16 @@ elif nav_tab == "💰 預算管理":
 
     with tab3:
         st.markdown("#### ✍️ 編輯：日常發放動支流水帳")
-        st.caption("請確實選擇正確的動支水庫（原始分配/計畫型預算），系統將自動為該局處獨立扣除額度。")
+        st.caption("請務必填寫正確的「計畫名稱」，系統才能從對應的專案水庫中扣除額度。")
         edited_log = st.data_editor(
             df_log, 
             num_rows="dynamic", 
             use_container_width=True,
             column_config={
-                "日期": st.column_config.TextColumn("日期 (例如: 115/06/26)", required=True),
+                "日期": st.column_config.TextColumn("日期 (例如: 2026/06/26)", required=True),
                 "局處名稱": st.column_config.TextColumn("局處名稱", required=True),
                 "預算類別": st.column_config.SelectboxColumn("預算類別", options=["原始分配", "計畫型預算"], required=True),
+                "計畫名稱": st.column_config.TextColumn("計畫名稱 (需與Master一致)", required=True),
                 "用途說明": st.column_config.TextColumn("用途說明", required=True),
                 "動支金額": st.column_config.NumberColumn("動支金額 (金幣數)", required=True, min_value=0)
             },
@@ -447,14 +449,15 @@ elif nav_tab == "💰 預算管理":
     # --- 儲存並透過 API 寫入 Google 表單 ---
     if st.button("💾 儲存預算變更並即時同步至 Google Sheets", type="primary", use_container_width=True):
         with st.spinner("🚀 正在將最新數據原子級寫入 Google Sheets..."):
-            final_master = edited_master.dropna(subset=["局處名稱", "分配額度"])
-            final_log = edited_log.dropna(subset=["局處名稱", "動支金額"])
+            # 確保不會寫入缺少計畫名稱或金額的空白列
+            final_master = edited_master.dropna(subset=["局處名稱", "計畫名稱", "分配額度"])
+            final_log = edited_log.dropna(subset=["局處名稱", "計畫名稱", "動支金額"])
             
             # 呼叫我們自己寫的 API 寫回 Google 表單
             update_sheet("Master", final_master)
             update_sheet("Log", final_log)
             
-            # 連動 K3 總額的邏輯維持不變
+            # 連動戰情首頁 K3 總額的邏輯維持不變
             total_115_pool = final_master[final_master["年度"].astype(str) == "115"]["分配額度"].sum() if not final_master.empty else 0
             if st.session_state.selected_period in DATA_ENGINE and st.session_state.selected_period != "尚無資料":
                 DATA_ENGINE[st.session_state.selected_period]["k3_metrics"]["b115"] = f"{int(total_115_pool):,}"
