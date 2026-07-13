@@ -317,7 +317,7 @@ elif nav_tab == "💰 預算管理":
     st.caption("台東金幣 Apps Script 零成本微型伺服器版 v11.22 (支援計畫名稱獨立核算)")
     
     # 🌟 已經修復網址重疊的錯誤！這是您的專屬正確網址
-    API_URL = "https://script.google.com/a/macros/dotdot.cc/s/AKfycbxk2AZKMC0rerQ83ufJvKh-gjHBCouuk6ZuqNL3atzXzjy6tGFDzvv44NIOCNl3tsKo/exec"
+    API_URL = "https://script.google.com/macros/s/AKfycbxF4hp0a2-F1BPIKDrMifUeN2aiOgyngjM_urhZgbG6g6etzISTzrcTH93oLvMLl5xhig/exec"
     
     # --- 定義雙向拋接的大腦 ---
     def fetch_sheet(sheet_name):
