@@ -759,7 +759,7 @@
         "k1_metrics": {
             "actual_total_users": 145476,
             "derived_weekly_new_users": 127,
-            "total_push_accumulated": 6559,
+            "total_push_accumulated": 6576,
             "weekly_push_current": 17
         },
         "k2_metrics": {
