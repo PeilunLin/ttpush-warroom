@@ -757,10 +757,10 @@
     },
     "統計區間：115/07/03 — 115/07/09": {
         "k1_metrics": {
-            "actual_total_users": 145476,
-            "derived_weekly_new_users": 127,
-            "total_push_accumulated": 6576,
-            "weekly_push_current": 17
+            "actual_total_users": 145349,
+            "derived_weekly_new_users": 0,
+            "total_push_accumulated": 6559,
+            "weekly_push_current": 0
         },
         "k2_metrics": {
             "weekly_coins_issued": 1019570,
@@ -779,8 +779,8 @@
             "b115": "80,686,000"
         },
         "k4_metrics": {
-            "expire_20260930_coins": 31970411,
-            "expire_20270930_coins": 19903273
+            "expire_20260930_coins": 31128643,
+            "expire_20270930_coins": 20283336
         }
     }
 }
