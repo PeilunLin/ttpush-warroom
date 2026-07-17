@@ -758,9 +758,9 @@
     "統計區間：115/07/03 — 115/07/09": {
         "k1_metrics": {
             "actual_total_users": 145349,
-            "derived_weekly_new_users": 0,
+            "derived_weekly_new_users": 127,
             "total_push_accumulated": 6559,
-            "weekly_push_current": 0
+            "weekly_push_current": 17
         },
         "k2_metrics": {
             "weekly_coins_issued": 1019570,
