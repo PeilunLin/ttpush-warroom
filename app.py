@@ -6,7 +6,9 @@ import io
 import datetime
 import time
 import requests
+import platform
 from github import Github
+from PIL import Image, ImageDraw, ImageFont
 
 # ==========================================
 # 1. 🌐 全域設定與 CSS 載入
@@ -68,9 +70,10 @@ with st.sidebar:
     st.markdown('<h2 style="margin:0; font-weight: 800; letter-spacing: -0.5px;">🎛️ TTPUSH維運控制台</h2>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
     
+    # 加入新的整合模組選項
     nav_tab = st.radio(
         "請選擇操作情境：",
-        options=["👀 戰情首頁", "🔄 週報維護", "💰 預算管理", "📞 客服紀錄"],
+        options=["👀 戰情首頁", "🔄 週報維護", "💰 預算管理", "📅 排程與預算中心", "📞 客服紀錄"],
         horizontal=False, 
         label_visibility="collapsed"
     )
@@ -316,10 +319,8 @@ elif nav_tab == "💰 預算管理":
     st.markdown('<h2 style="color: #1e3a8a; font-weight: 800; margin-bottom: 5px;">💰 預算管理與局處動支分配表</h2>', unsafe_allow_html=True)
     st.caption("台東金幣 Apps Script 零成本微型伺服器版 v11.22 (支援計畫名稱獨立核算)")
     
-    # 🌟 已經修復網址重疊的錯誤！這是您的專屬正確網址
     API_URL = "https://script.google.com/macros/s/AKfycbxF4hp0a2-F1BPIKDrMifUeN2aiOgyngjM_urhZgbG6g6etzISTzrcTH93oLvMLl5xhig/exec"
     
-    # --- 定義雙向拋接的大腦 ---
     def fetch_sheet(sheet_name):
         try:
             res = requests.post(API_URL, json={"action": "read", "sheet_name": sheet_name})
@@ -333,16 +334,13 @@ elif nav_tab == "💰 預算管理":
             return pd.DataFrame()
 
     def update_sheet(sheet_name, df):
-        # 將 DataFrame 轉回 2D 陣列格式傳給 Google Sheet
         data_to_send = [df.columns.tolist()] + df.values.tolist()
         requests.post(API_URL, json={"action": "update", "sheet_name": sheet_name, "data": data_to_send})
 
-    # --- 執行讀取 ---
     with st.spinner("🔄 正在從 Google Sheets 雲端拋接最新三層式數據..."):
         df_master = fetch_sheet("Master")
         df_log = fetch_sheet("Log")
         
-        # 確保資料格式正確，定義包含「計畫名稱」的欄位結構
         if not df_master.empty:
             df_master["年度"] = df_master["年度"].astype(int)
             df_master["分配額度"] = df_master["分配額度"].astype(int)
@@ -354,7 +352,6 @@ elif nav_tab == "💰 預算管理":
         else:
             df_log = pd.DataFrame(columns=["日期", "局處名稱", "預算類別", "計畫名稱", "用途說明", "動支金額"])
 
-    # 🌟 建立精準的三層式視覺化週報運算邏輯
     report_rows = []
     if not df_master.empty:
         for idx, row in df_master.iterrows():
@@ -363,7 +360,6 @@ elif nav_tab == "💰 預算管理":
             proj = row["計畫名稱"]
             allocated = int(row["分配額度"])
             
-            # 精準對應局處、預算類別與計畫名稱來扣款
             if not df_log.empty:
                 spent = df_log[(df_log["局處名稱"] == dept) & 
                                (df_log["預算類別"] == b_type) & 
@@ -446,18 +442,14 @@ elif nav_tab == "💰 預算管理":
         )
         
     st.markdown("---")
-    # --- 儲存並透過 API 寫入 Google 表單 ---
     if st.button("💾 儲存預算變更並即時同步至 Google Sheets", type="primary", use_container_width=True):
         with st.spinner("🚀 正在將最新數據原子級寫入 Google Sheets..."):
-            # 確保不會寫入缺少計畫名稱或金額的空白列
             final_master = edited_master.dropna(subset=["局處名稱", "計畫名稱", "分配額度"])
             final_log = edited_log.dropna(subset=["局處名稱", "計畫名稱", "動支金額"])
             
-            # 呼叫我們自己寫的 API 寫回 Google 表單
             update_sheet("Master", final_master)
             update_sheet("Log", final_log)
             
-            # 連動戰情首頁 K3 總額的邏輯維持不變
             total_115_pool = final_master[final_master["年度"].astype(str) == "115"]["分配額度"].sum() if not final_master.empty else 0
             if st.session_state.selected_period in DATA_ENGINE and st.session_state.selected_period != "尚無資料":
                 DATA_ENGINE[st.session_state.selected_period]["k3_metrics"]["b115"] = f"{int(total_115_pool):,}"
@@ -468,3 +460,243 @@ elif nav_tab == "💰 預算管理":
             st.success("🎉 完美落地！資料已成功寫入 Google 試算表，首頁 K3 也已連動！")
             time.sleep(1.5)
             st.rerun()
+
+# ==========================================
+# 6. 📅 排程與預算中心 (新擴充模組)
+# ==========================================
+elif nav_tab == "📅 排程與預算中心":
+    st.markdown('<h2 style="color: #1e3a8a; font-weight: 800; margin-bottom: 5px;">📅 排程與預算優化中心</h2>', unsafe_allow_html=True)
+    
+    # 將畫面分為兩個頁籤
+    tab_budget, tab_schedule = st.tabs(["💰 預算報表優化", "🖼️ 金幣線上排程表"])
+
+    # --- 區塊 1：預算報表優化 ---
+    with tab_budget:
+        st.markdown("#### 📥 特定局處預算萃取與分析")
+        try:
+            # 讀取預算報表[cite: 1]
+            df_budget = pd.read_excel('預算報表.xlsx')
+            num_cols = ['原始預算總額', '目前預算總額', '預算已分配幣', '預算可分配幣']
+            
+            # 清理數字格式[cite: 1]
+            for col in num_cols:
+                df_budget[col] = df_budget[col].astype(str).str.replace(',', '').astype(float)
+                
+            # 擷取特定範圍 (480列 與 484-500列)[cite: 1]
+            p17_dept_rows = df_budget.loc[484:500].copy()
+            p17_dept_rows = pd.concat([df_budget.loc[480:480], p17_dept_rows])
+            
+            total_original_budget = p17_dept_rows['原始預算總額'].sum()
+            
+            st.metric("🏆 篩選範圍之原始預算總額", f"{total_original_budget:,.0f} 枚")
+            st.dataframe(p17_dept_rows[['單位', '預算名稱', '原始預算總額', '預算已分配幣', '預算可分配幣']], use_container_width=True)
+            
+        except FileNotFoundError:
+            st.warning("⚠️ 找不到 `預算報表.xlsx` 檔案，請確認檔案已放置於專案根目錄中。")
+        except Exception as e:
+            st.error(f"預算報表解析發生錯誤: {e}")
+
+    # --- 區塊 2：金幣線上排程表 ---
+    with tab_schedule:
+        st.markdown("#### 🎨 單日多筆排程圖表即時渲染")
+        
+        if st.button("🚀 產生最新排程表圖片", type="primary"):
+            with st.spinner("正在繪製排程圖表..."):
+                
+                # 設定畫布與字體環境[cite: 2]
+                width, height = 1600, 1450
+                img = Image.new('RGB', (width, height), color=(255, 255, 255))
+                draw = ImageDraw.Draw(img)
+                
+                # 自動字體偵測防呆機制，取代固定的 /usr/share/fonts 路徑[cite: 2]
+                def get_safe_font(size):
+                    sys_plat = platform.system()
+                    font_paths = [
+                        '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc', 
+                        'msjh.ttc', 'PingFang.ttc', 'Arial.ttf'
+                    ]
+                    for pt in font_paths:
+                        try:
+                            return ImageFont.truetype(pt, size)
+                        except IOError:
+                            continue
+                    return ImageFont.load_default()
+
+                f_title = get_safe_font(32)
+                f_subtitle = get_safe_font(15)
+                f_kpi_num = get_safe_font(30)
+                f_kpi_label = get_safe_font(15)
+                f_kpi_sub = get_safe_font(13)
+                f_th = get_safe_font(16)
+                f_td_bold = get_safe_font(15)
+                f_td = get_safe_font(15)
+                f_badge = get_safe_font(13)
+                f_note_title = get_safe_font(15)
+                f_note = get_safe_font(13)
+
+                # 排程模擬數據 (包含 8/17 的 4 筆活動)[cite: 2]
+                data_multi = [
+                    {"date": "2026/08/17", "day": "星期一", "date_span": 4, "is_first_of_date": True, "dept": "臺東縣政府社會處", "type": "問答", "title": "【暑期青春專案-青春無限~不與「毒」同行】", "coin": "10 枚", "quota": "1,600 人", "total": "16,000 枚", "active": True},
+                    {"date": "2026/08/17", "day": "星期一", "date_span": 4, "is_first_of_date": False, "dept": "臺東縣警察局", "type": "問答", "title": "防制少年涉入財產犯罪宣導活動", "coin": "20 枚", "quota": "5,000 人", "total": "100,000 枚", "active": True},
+                    {"date": "2026/08/17", "day": "星期一", "date_span": 4, "is_first_of_date": False, "dept": "臺東縣衛生局", "type": "問答", "title": "青壯的心，有我傾聽！心理健康小學堂", "coin": "30 枚", "quota": "5,000 人", "total": "150,000 枚", "active": True},
+                    {"date": "2026/08/17", "day": "星期一", "date_span": 4, "is_first_of_date": False, "dept": "臺東縣政府財政及經濟發展處", "type": "問答", "title": "2026臺東綠能論壇~歡迎大家踴躍參與", "coin": "20 枚", "quota": "5,000 人", "total": "100,000 枚", "active": True},
+                    {"date": "2026/08/18", "day": "星期二", "date_span": 1, "is_first_of_date": True, "dept": "臺東縣政府建設處", "type": "問答", "title": "太平溪環境改善及水資源宣導活動", "coin": "50 枚", "quota": "7,400 人", "total": "370,000 枚", "active": True},
+                    {"date": "2026/08/19", "day": "星期三", "date_span": 1, "is_first_of_date": True, "dept": "臺東縣衛生局", "type": "問答", "title": "台東甜蜜蜜，健康「篩」得好安心！", "coin": "30 枚", "quota": "10,000 人", "total": "300,000 枚", "active": True},
+                    {"date": "2026/08/20", "day": "星期四", "date_span": 1, "is_first_of_date": True, "dept": "-", "type": "-", "title": "（本日無預排線上問答活動）", "coin": "-", "quota": "-", "total": "-", "active": False},
+                    {"date": "2026/08/21", "day": "星期五", "date_span": 1, "is_first_of_date": True, "dept": "-", "type": "-", "title": "（本日無預排線上問答活動）", "coin": "-", "quota": "-", "total": "-", "active": False}
+                ]
+
+                # 繪製頭部橫幅[cite: 2]
+                header_height = 110
+                draw.rectangle([(0, 0), (width, header_height)], fill=(15, 23, 42))
+                draw.rectangle([(0, 0), (width, 6)], fill=(245, 158, 11))
+                draw.text((60, 26), "115年度 TTPush 金幣推播與線上活動排程表（單日多筆模擬）", font=f_title, fill=(255, 255, 255))
+                draw.text((60, 72), "[ 統計範圍 ] 8月17日(一) ～ 8月21日(五)線上問答排程    |    [ 模擬情境 ] 8/17 單日集中 4 筆活動    |    [ 統計日期 ] 115年8月", font=f_subtitle, fill=(148, 163, 184))
+
+                # 繪製頂部 KPI 卡片[cite: 2]
+                cards_data = [
+                    {"label": "排程活動總數", "value": "6 檔", "sub": "8/17(4檔)、8/18(1檔)、8/19(1檔)", "bg": (238, 242, 255), "left_bar": (79, 70, 229), "val_color": (67, 56, 202)},
+                    {"label": "發放金幣總額 (枚)", "value": "1,036,000", "sub": "多局處聯合推播預算", "bg": (254, 243, 199), "left_bar": (217, 119, 6), "val_color": (180, 83, 9)},
+                    {"label": "預計受惠總人次 (人)", "value": "34,000", "sub": "發放名額累計上限", "bg": (204, 251, 241), "left_bar": (13, 148, 136), "val_color": (15, 118, 110)},
+                    {"label": "單日最高排程密度", "value": "4 檔 / 日", "sub": "8/17 (一) 達高峰", "bg": (241, 245, 249), "left_bar": (100, 116, 139), "val_color": (30, 41, 59)}
+                ]
+
+                card_y = 135
+                card_w = (width - 120 - 3 * 18) / 4
+                card_h = 100
+
+                for idx, c in enumerate(cards_data):
+                    cx = 60 + idx * (card_w + 18)
+                    draw.rounded_rectangle([(cx, card_y), (cx + card_w, card_y + card_h)], radius=10, fill=c["bg"])
+                    draw.rounded_rectangle([(cx, card_y), (cx + 6, card_y + card_h)], radius=3, fill=c["left_bar"])
+                    draw.text((cx + 22, card_y + 14), c["label"], font=f_kpi_label, fill=(100, 116, 139))
+                    draw.text((cx + 22, card_y + 36), c["value"], font=f_kpi_num, fill=c["val_color"])
+                    draw.text((cx + 22, card_y + 72), c["sub"], font=f_kpi_sub, fill=(100, 116, 139))
+
+                # 繪製主數據表格[cite: 2]
+                headers = ["推播日期", "星期", "辦理局處名稱", "發放方式", "活動標題名稱", "單次金幣 (枚)", "發放名額 (人)", "預算金額 (枚)"]
+                col_widths = [130, 80, 200, 100, 480, 120, 130, 140]
+
+                col_x = [60]
+                for w in col_widths[:-1]:
+                    col_x.append(col_x[-1] + w)
+
+                start_y = 265
+                header_height = 50
+                row_height = 65
+
+                draw.rounded_rectangle([(60, start_y), (width - 60, start_y + header_height)], radius=8, fill=(30, 41, 59))
+
+                def get_text_size(text, font):
+                    bbox = draw.textbbox((0, 0), text, font=font)
+                    return bbox[2] - bbox[0], bbox[3] - bbox[1]
+
+                for i, h in enumerate(headers):
+                    align = "center" if i in [0, 1, 3, 5, 6, 7] else "left"
+                    tw, _ = get_text_size(h, f_th)
+                    tx = col_x[i] + (col_widths[i] - tw) / 2 if align == "center" else col_x[i] + 16
+                    ty = start_y + (header_height - 18) / 2
+                    draw.text((tx, ty), h, font=f_th, fill=(255, 255, 255))
+
+                current_y = start_y + header_height + 6
+
+                # 包含 Rowspan 機制的迴圈渲染[cite: 2]
+                i_idx = 0
+                while i_idx < len(data_multi):
+                    r = data_multi[i_idx]
+                    span = r["date_span"]
+                    
+                    group_h = span * row_height - 4
+                    group_bg = (255, 255, 255) if (i_idx // span if span > 1 else i_idx) % 2 == 0 else (241, 245, 249)
+                    
+                    for sub_i in range(span):
+                        sub_r = data_multi[i_idx + sub_i]
+                        curr_row_y = current_y + sub_i * row_height
+                        
+                        row_bg = (255, 255, 255) if (i_idx + sub_i) % 2 == 0 else (248, 250, 252)
+                        draw.rounded_rectangle([(60, curr_row_y), (width - 60, curr_row_y + row_height - 4)], radius=4, fill=row_bg)
+                        draw.rectangle([(60, curr_row_y), (width - 60, curr_row_y + row_height - 4)], outline=(226, 232, 240), width=1)
+                        
+                        row_vals = [sub_r["dept"], sub_r["type"], sub_r["title"], sub_r["coin"], sub_r["quota"], sub_r["total"]]
+                        col_indices = [2, 3, 4, 5, 6, 7]
+                        
+                        for c_idx, val in zip(col_indices, row_vals):
+                            f_use = f_td
+                            fill_color = (15, 23, 42)
+                            
+                            if not sub_r["active"]:
+                                fill_color = (148, 163, 184)
+                            else:
+                                if c_idx == 2:
+                                    f_use = f_td_bold
+                                elif c_idx == 5:
+                                    f_use = f_td_bold
+                                    fill_color = (217, 119, 6)
+                                elif c_idx == 7:
+                                    f_use = f_td_bold
+                                    fill_color = (13, 148, 136)
+                                    
+                            if c_idx == 3 and sub_r["type"] == "問答":
+                                bw, bh = 56, 26
+                                bx = col_x[c_idx] + (col_widths[c_idx] - bw) / 2
+                                by = curr_row_y + (row_height - 4 - bh) / 2
+                                draw.rounded_rectangle([(bx, by), (bx + bw, by + bh)], radius=5, fill=(220, 252, 231))
+                                draw.text((bx + 14, by + 4), "問答", font=f_badge, fill=(22, 101, 52))
+                            else:
+                                align = "center" if c_idx in [3, 5, 6, 7] else "left"
+                                tw, _ = get_text_size(val, f_use)
+                                tx = col_x[c_idx] + (col_widths[c_idx] - tw) / 2 if align == "center" else col_x[c_idx] + 16
+                                ty = curr_row_y + (row_height - 4 - 18) / 2
+                                draw.text((tx, ty), val, font=f_use, fill=fill_color)
+                    
+                    block_y_start = current_y
+                    block_y_end = current_y + span * row_height - 4
+                    
+                    date_bg = (238, 242, 255) if span > 1 else ((255, 255, 255) if i_idx % 2 == 0 else (241, 245, 249))
+                    draw.rounded_rectangle([(60, block_y_start), (col_x[2] - 2, block_y_end)], radius=4, fill=date_bg)
+                    draw.rectangle([(60, block_y_start), (col_x[2] - 2, block_y_end)], outline=(199, 210, 254) if span > 1 else (226, 232, 240), width=1.5 if span > 1 else 1)
+                    
+                    date_str = r["date"]
+                    day_str = r["day"]
+                    
+                    tw, _ = get_text_size(date_str, f_td_bold)
+                    tx = col_x[0] + (col_widths[0] - tw) / 2
+                    ty = block_y_start + (block_y_end - block_y_start) / 2 - 18
+                    draw.text((tx, ty), date_str, font=f_td_bold, fill=(30, 58, 138) if span > 1 else (15, 23, 42))
+                    
+                    tw, _ = get_text_size(day_str, f_td_bold)
+                    tx = col_x[1] + (col_widths[1] - tw) / 2
+                    draw.text((tx, ty), day_str, font=f_td_bold, fill=(30, 58, 138) if span > 1 else (15, 23, 42))
+                    
+                    if span > 1:
+                        badge_text = f"共 {span} 檔"
+                        tw, _ = get_text_size(badge_text, f_badge)
+                        bx = col_x[0] + (col_widths[0] + col_widths[1] - tw) / 2
+                        by = ty + 24
+                        draw.rounded_rectangle([(bx - 8, by), (bx + tw + 8, by + 20)], radius=10, fill=(199, 210, 254))
+                        draw.text((bx, by + 2), badge_text, font=f_badge, fill=(49, 46, 129))
+
+                    current_y += span * row_height
+                    i_idx += span
+
+                # 繪製底部說明區塊[cite: 2]
+                footer_y = current_y + 30
+                draw.line([(60, footer_y), (width - 60, footer_y)], fill=(226, 232, 240), width=1)
+
+                notes = [
+                    "[ 報表說明 ]",
+                    "1. 當同一天有多筆活動上架時（如 8/17 集中 4 筆），日期欄位將自動進行跨列群組合併 (Rowspan)，視覺結構依舊清晰不重疊。",
+                    "2. 金幣計算公式為：預算金額 (枚) ＝ 單次金幣 (枚) × 發放名額 (人)。",
+                    "3. 8/20 (四) 及 8/21 (五) 目前無預排線上活動，若有局處臨時加單，將隨時修正並更換最新版排程表。"
+                ]
+
+                note_ty = footer_y + 18
+                for idx, n in enumerate(notes):
+                    font_u = f_note_title if idx == 0 else f_note
+                    color_u = (30, 41, 59) if idx == 0 else (100, 116, 139)
+                    draw.text((60, note_ty), n, font=font_u, fill=color_u)
+                    note_ty += 22
+
+                # 直接呈現在網頁中，不再儲存本機檔案
+                st.image(img, caption="115年度 TTPush 金幣推播與線上活動排程表", use_container_width=True)
+                st.success("✅ 圖表動態渲染生成完畢！")
