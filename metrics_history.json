@@ -988,8 +988,8 @@
         },
         "k2_metrics": {
             "weekly_coins_issued": 14511641,
-            "weekly_coins_redeemed_audited": 12151570,
-            "active_stores_count": 0,
+            "weekly_coins_redeemed_audited": 12098330,
+            "active_stores_count": 209,
             "new_stores_adjusted": 0,
             "total_accumulated_coins": 392750873,
             "total_stores_accumulated": 696
