@@ -279,7 +279,8 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
-    k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "80,681,000"})
+    # ✅ 修改點 1：將預設字典中的 b115 更新為 113,381,500
+    k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "113,381,500"})
     k4_d = current_data.get("k4_metrics", {})
 
     t_users_str = f"{int(k1_d.get('actual_total_users', 0)):,}"
@@ -298,7 +299,8 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     b112_val = k3_d.get('b112','66,302,010')
     b113_val = k3_d.get('b113','104,541,785')
     b114_val = k3_d.get('b114','82,390,693')
-    b115_val = k3_d.get('b115','80,681,000')
+    # ✅ 修改點 2：將畫面上獨立讀取的預設值也更新為 113,381,500
+    b115_val = k3_d.get('b115','113,381,500')
 
     def parse_budget(val): return int(str(val).replace(',', '').strip() or 0)
     total_budget_str = f"{parse_budget(b110_val)+parse_budget(b111_val)+parse_budget(b112_val)+parse_budget(b113_val)+parse_budget(b114_val)+parse_budget(b115_val):,}"
