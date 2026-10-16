@@ -283,36 +283,43 @@ with st.sidebar:
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown("""<div style="text-align: center; color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.22</div>""", unsafe_allow_html=True)
 
-
 # ==========================================
 # 4. 📺 主畫面渲染 - 戰情首頁
 # ==========================================
 if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # --- 捨棄容易跑版的雙層疊加，直接針對原生選單「換皮」 ---
+    # 🌟 終極穩定版 CSS：直接改造原生選單外觀，絕不影響下拉清單的錨點與點擊
     st.markdown("""
     <style>
+    /* 限制選單寬度與上下間距 */
     div[data-testid="stSelectbox"] {
-        max-width: 380px;
-        margin-top: 15px;
-        margin-bottom: 20px;
+        max-width: 350px !important;
+        margin-top: 10px !important;
+        margin-bottom: 25px !important;
     }
+    /* 改造選單輸入框背景與圓角 (莫蘭迪綠膠囊) */
     div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-        background-color: #e8f0ec !important; /* 莫蘭迪綠底色 */
-        border-radius: 50px !important;      /* 完美橢圓圓角 */
-        border: 1px solid #d1d5db !important; /* 淡淡的邊框增加立體感 */
-        padding: 4px 10px !important;
-        font-weight: 700 !important;
-        color: #1f2937 !important;
+        background-color: #e8f0ec !important; 
+        border-radius: 999px !important; 
+        border: none !important;
+        padding: 2px 10px !important;
         box-shadow: none !important;
     }
+    /* 強化選取的文字顏色與粗細 */
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div > div > div {
+        color: #1f2937 !important;
+        font-weight: 800 !important;
+        font-size: 15px !important;
+    }
+    /* 滑鼠懸停效果 */
     div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover {
         background-color: #dce7e2 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
+    # 建立原生選單，它會自動套用上方的膠囊 CSS
     st.selectbox(
         "隱形控制核心", 
         options=historical_periods_list, 
@@ -321,11 +328,13 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
         key="capsule_hidden_key", 
         on_change=on_hidden_capsule_change
     )
+    
     # ==========================================
+    # 讀取並渲染 KPI 資料
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
-    k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "113,381,500"})
+    k3_d = current_data.get("k3_metrics", {})
     k4_d = current_data.get("k4_metrics", {})
 
     t_users_str = f"{int(k1_d.get('actual_total_users', 0)):,}"
@@ -339,24 +348,28 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     new_stores_str = f"{int(k2_d.get('new_stores_adjusted', 0)):,}"
     total_stores_str = f"{int(k2_d.get('total_stores_accumulated', 679)):,}"
 
-    b110_val = k3_d.get('b110','176,839,060')
-    b111_val = k3_d.get('b111','67,113,280')
-    b112_val = k3_d.get('b112','66,302,010')
-    b113_val = k3_d.get('b113','104,541,785')
-    b114_val = k3_d.get('b114','82,390,693')
-    b115_val = k3_d.get('b115','113,381,500')
+    # 歷年預算數值提取
+    b110_val = k3_d.get('b110', '176,839,060')
+    b111_val = k3_d.get('b111', '67,113,280')
+    b112_val = k3_d.get('b112', '66,302,010')
+    b113_val = k3_d.get('b113', '104,541,785')
+    b114_val = k3_d.get('b114', '82,390,693')
+    
+    # ✅ 強制寫死 115年/17期 為最新預算數字
+    b115_val = '113,381,500'
 
+    # 自動加總總預算
     def parse_budget(val): return int(str(val).replace(',', '').strip() or 0)
     total_budget_str = f"{parse_budget(b110_val)+parse_budget(b111_val)+parse_budget(b112_val)+parse_budget(b113_val)+parse_budget(b114_val)+parse_budget(b115_val):,}"
     
     exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
+    # 排版與卡片渲染 (K4 已拔除 2026)
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
     with k1: st.markdown(f'<div class="unified-card k1-card"><div class="card-section-top"><span class="card-label">累積會員總數</span><div class="hero-val-wrapper"><span class="hero-value">{t_users_str}</span><span class="unit">人</span></div><div class="growth-tag">▲ 本週新增 +{w_users_str} 人</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">推播統計</span><div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div><div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div></div></div>', unsafe_allow_html=True)
     with k2: st.markdown(f'<div class="unified-card k2-card"><div class="card-section-top"><span class="card-label">當週指標</span><div class="app-list-item" style="margin-top: 8px;">✨ 當週發放：<span class="data-bold">{w_issued_str}</span> 枚</div><div class="app-list-item">🎁 當週兌換：<span class="data-bold">{w_redeemed_str}</span> 枚</div><div class="app-list-item">💲 消費店家：<span class="data-bold">{active_stores_str}</span> 家</div><div class="app-list-item">🏪 總特約店：<span class="data-bold">{total_stores_str}</span> 家</div><div class="app-list-item">📈 新增店家：<span class="data-bold">+{new_stores_str}</span> 家</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">臺東金幣總發放數</span><div class="hero-val-wrapper"><span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span></div><div class="section-note-bottom">累積自 110/01/01 起算</div></div></div>', unsafe_allow_html=True)
     with k3: st.markdown(f'<div class="unified-card k3-card"><div class="card-section-top"><span class="card-label">臺東金幣總預算數</span><div class="hero-val-wrapper"><span class="hero-value">{total_budget_str}</span><span class="unit">枚</span></div><div class="section-note-top-k3">累計 110至115年度預算(11-17期)</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">📅 歷年預算明細</span><div class="budget-grid"><div class="budget-item"><span class="b-year">110年/11+12期</span><span class="val">{b110_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">111年/13期</span><span class="val">{b111_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">112年/14期</span><span class="val">{b112_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">113年/15期</span><span class="val">{b113_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">114年/16期</span><span class="val">{b114_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">115年/17期</span><span class="val">{b115_val}</span><span class="b-unit">枚</span></div></div></div></div>', unsafe_allow_html=True)
     with k4: st.markdown(f'<div class="unified-card k4-card"><div class="card-section-top"><span class="card-label">⚠️ 金幣到期預警</span><div class="expire-list-container"><div class="expire-row"><span class="expire-date">2027/09/30 到期</span><div class="expire-val-wrapper"><span class="expire-number">{exp27_str}</span><span class="expire-unit">枚</span></div></div></div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">📢 營運備註整理</span><ul class="ops-notes"><li><span class="note-tag">維護</span>114/06/04 因 4.0 上線系統關閉維護</li><li><span class="note-tag">封測</span>114/06/23-27 進行 4.0 核心封測</li><li><span class="note-tag">推播</span>113/09/25-11/06 暫停金幣推播</li><li><span class="note-tag">對象</span>推播含所有用戶及縣民群組</li><li><span class="note-tag">基準</span>金幣統計自 110/01/01 起算</li></ul></div></div>', unsafe_allow_html=True)
-# ==========================================
 # 5. 💰 預算管理模組 (三層式架構 CRUD 核心)
 # ==========================================
 elif nav_tab == "💰 預算管理":
