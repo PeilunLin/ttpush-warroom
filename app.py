@@ -292,14 +292,11 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     st.markdown("""<style>section[data-testid="stMain"] div[data-testid="stSelectbox"] { margin-top: -60px !important; opacity: 0 !important; z-index: 999 !important; cursor: pointer !important; }</style>""", unsafe_allow_html=True)
     st.markdown(f"""<div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px; position: relative;"><div class="morandi-static-capsule">{st.session_state.selected_period}</div></div>""", unsafe_allow_html=True)
     st.selectbox("隱形控制核心", options=historical_periods_list, index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, label_visibility="collapsed", key="capsule_hidden_key", on_change=on_hidden_capsule_change)
-    
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
-    # ✅ 修改點 1：將預設字典中的 b115 更新為 113,381,500
     k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "113,381,500"})
     k4_d = current_data.get("k4_metrics", {})
-
     t_users_str = f"{int(k1_d.get('actual_total_users', 0)):,}"
     w_users_str = f"{int(k1_d.get('derived_weekly_new_users', 0)):,}"
     t_push_str = f"{int(k1_d.get('total_push_accumulated', 0)):,}"
@@ -316,7 +313,6 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     b112_val = k3_d.get('b112','66,302,010')
     b113_val = k3_d.get('b113','104,541,785')
     b114_val = k3_d.get('b114','82,390,693')
-    # ✅ 修改點 2：將畫面上獨立讀取的預設值也更新為 113,381,500
     b115_val = k3_d.get('b115','116,465,940')
 
     def parse_budget(val): return int(str(val).replace(',', '').strip() or 0)
