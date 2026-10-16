@@ -287,42 +287,41 @@ with st.sidebar:
 # ==========================================
 # 4. 📺 主畫面渲染 - 戰情首頁
 # ==========================================
-# ==========================================
-# 4. 📺 主畫面渲染 - 戰情首頁
-# ==========================================
-# ==========================================
-# 4. 📺 主畫面渲染 - 戰情首頁
-# ==========================================
 if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # --- 全新疊加邏輯：透明選單在底層接收點擊，視覺膠囊在頂層顯示 ---
+    # --- 捨棄容易跑版的雙層疊加，直接針對原生選單「換皮」 ---
     st.markdown("""
     <style>
-    /* 1. 隱藏原生選單外觀，但保留它的點擊熱區 */
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] {
-        opacity: 0 !important;
-        cursor: pointer !important;
+    div[data-testid="stSelectbox"] {
+        max-width: 380px;
+        margin-top: 15px;
+        margin-bottom: 20px;
     }
-    /* 2. 膠囊往上拉疊加在選單上，並設定穿透點擊 (pointer-events: none) */
-    .overlay-capsule-container {
-        margin-top: -50px !important; 
-        margin-bottom: 25px !important;
-        pointer-events: none !important; /* 🌟 關鍵魔法：讓點擊直接穿透給底下的選單 */
-        position: relative;
-        z-index: 10;
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+        background-color: #e8f0ec !important; /* 莫蘭迪綠底色 */
+        border-radius: 50px !important;      /* 完美橢圓圓角 */
+        border: 1px solid #d1d5db !important; /* 淡淡的邊框增加立體感 */
+        padding: 4px 10px !important;
+        font-weight: 700 !important;
+        color: #1f2937 !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover {
+        background-color: #dce7e2 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # 1. 建立真實的下拉選單 (目前外觀已透明，在底層)
-    st.selectbox("隱形控制核心", options=historical_periods_list, index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, label_visibility="collapsed", key="capsule_hidden_key", on_change=on_hidden_capsule_change)
-    
-    # 2. 建立視覺膠囊，直接覆蓋在選單上方 (頂層顯示，點擊穿透)
-    st.markdown(f"""<div class="overlay-capsule-container"><div class="morandi-static-capsule">{st.session_state.selected_period}</div></div>""", unsafe_allow_html=True)
-    
+    st.selectbox(
+        "隱形控制核心", 
+        options=historical_periods_list, 
+        index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, 
+        label_visibility="collapsed", 
+        key="capsule_hidden_key", 
+        on_change=on_hidden_capsule_change
+    )
     # ==========================================
-    # 讀取並渲染 KPI 資料
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
