@@ -204,21 +204,33 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("### 🛠️ 步驟二：審核與同步")
         with st.expander("⚙️ 進階：手動數據微調與雲端同步", expanded=False):
-            cur_data = DATA_ENGINE.get(st.session_state.selected_period, {})
-            cur_k1, cur_k2, cur_k4 = cur_data.get("k1_metrics", {}), cur_data.get("k2_metrics", {}), cur_data.get("k4_metrics", {})
+            cur_data = DATA_ENGINE.get(st.session_state.selected_selected_period if "selected_period" in st.session_state else st.session_state.selected_period, {})
+            cur_k1 = cur_data.get("k1_metrics", {})
+            cur_k2 = cur_data.get("k2_metrics", {})
+            cur_k3 = cur_data.get("k3_metrics", {}) # ✅ 新增取得 k3_metrics
+            cur_k4 = cur_data.get("k4_metrics", {})
+            
             with st.form("manual_override_form", border=False):
                 col_p1, col_p2 = st.columns(2)
                 with col_p1: new_w_push = st.number_input("🚀 本週推播數", value=int(cur_k1.get("weekly_push_current", 0)), step=1)
                 with col_p2: new_t_push = st.number_input("📣 累積推播數", value=int(cur_k1.get("total_push_accumulated", 0)), step=1)
+                
                 col_u1, col_u2 = st.columns(2)
                 with col_u1: new_w_users = st.number_input("👤 本週新增會員", value=int(cur_k1.get("derived_weekly_new_users", 0)), step=1)
                 with col_u2: new_t_users = st.number_input("👥 累積會員數", value=int(cur_k1.get("actual_total_users", 0)), step=1)
+                
                 col_s1, col_s2 = st.columns(2)
                 with col_s1: new_w_stores = st.number_input("📈 本週新增店家", value=int(cur_k2.get("new_stores_adjusted", 0)), step=1)
                 with col_s2: new_t_stores = st.number_input("🏪 總特約店家數", value=int(cur_k2.get("total_stores_accumulated", 0)), step=1)
+                
                 col_e1, col_e2 = st.columns(2)
-                with col_e1: new_exp26 = st.number_input("⏳ 2026到期", value=int(cur_k4.get("expire_20260930_coins", 0)), step=1)
+                # 您可以保留 2026 的輸入框備用，或將其數值預設為 0 (前台已隱藏)
+                with col_e1: new_exp26 = st.number_input("⏳ 2026到期(已隱藏)", value=int(cur_k4.get("expire_20260930_coins", 0)), step=1)
                 with col_e2: new_exp27 = st.number_input("⏳ 2027到期", value=int(cur_k4.get("expire_20270930_coins", 0)), step=1)
+                
+                # ✅ 新增 115年度預算輸入框，預設抓取 JSON 內的資料
+                new_b115 = st.text_input("💰 115年/17期預算", value=str(cur_k3.get("b115", "113,381,500")))
+                
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.form_submit_button("💾 儲存並同步至雲端", type="primary"):
                     DATA_ENGINE[st.session_state.selected_period]["k1_metrics"]["weekly_push_current"] = new_w_push
@@ -229,6 +241,11 @@ with st.sidebar:
                     DATA_ENGINE[st.session_state.selected_period]["k2_metrics"]["total_stores_accumulated"] = new_t_stores
                     DATA_ENGINE[st.session_state.selected_period]["k4_metrics"]["expire_20260930_coins"] = new_exp26
                     DATA_ENGINE[st.session_state.selected_period]["k4_metrics"]["expire_20270930_coins"] = new_exp27
+                    # ✅ 將編輯後的預算寫回 JSON
+                    if "k3_metrics" not in DATA_ENGINE[st.session_state.selected_period]:
+                        DATA_ENGINE[st.session_state.selected_period]["k3_metrics"] = {}
+                    DATA_ENGINE[st.session_state.selected_period]["k3_metrics"]["b115"] = new_b115
+                    
                     with open(JSON_FILE, "w", encoding="utf-8") as f: json.dump(DATA_ENGINE, f, ensure_ascii=False, indent=4)
                     if "GITHUB_TOKEN" in st.secrets and "GITHUB_REPO" in st.secrets:
                         try:
