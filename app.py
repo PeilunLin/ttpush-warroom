@@ -282,46 +282,41 @@ with st.sidebar:
 
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown("""<div style="text-align: center; color: #9ca3af; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">台東金幣大數據雲端自動化引擎 v11.22</div>""", unsafe_allow_html=True)
-
 # ==========================================
 # 4. 📺 主畫面渲染 - 戰情首頁
 # ==========================================
 if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # 🌟 終極穩定版 CSS：直接改造原生選單外觀，絕不影響下拉清單的錨點與點擊
+    # 🌟 最安全的淺層 CSS 換皮法：只改顏色與圓角，絕不更動排版座標
     st.markdown("""
     <style>
-    /* 限制選單寬度與上下間距 */
+    /* 1. 限制選單外框寬度與安全間距 */
     div[data-testid="stSelectbox"] {
-        max-width: 350px !important;
+        max-width: 380px !important;
         margin-top: 10px !important;
         margin-bottom: 25px !important;
     }
-    /* 改造選單輸入框背景與圓角 (莫蘭迪綠膠囊) */
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-        background-color: #e8f0ec !important; 
-        border-radius: 999px !important; 
-        border: none !important;
-        padding: 2px 10px !important;
+    /* 2. 直接修改選擇器內部第一層外觀 (背景、圓角、文字) */
+    div[data-testid="stSelectbox"] > div > div {
+        background-color: #e8f0ec !important; /* 莫蘭迪綠膠囊底色 */
+        border-radius: 50px !important;       /* 大圓角 */
+        border: 1px solid #d1d5db !important; /* 細緻邊框 */
+        color: #1f2937 !important;            /* 深色字體 */
+        font-weight: 800 !important;          /* 字體加粗 */
         box-shadow: none !important;
+        padding-left: 10px !important;
     }
-    /* 強化選取的文字顏色與粗細 */
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div > div > div {
-        color: #1f2937 !important;
-        font-weight: 800 !important;
-        font-size: 15px !important;
-    }
-    /* 滑鼠懸停效果 */
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover {
+    /* 3. 滑鼠懸停的互動回饋 */
+    div[data-testid="stSelectbox"] > div > div:hover {
         background-color: #dce7e2 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # 建立原生選單，它會自動套用上方的膠囊 CSS
+    # 建立乾淨的原生選單，它會自動穿上上方的膠囊外衣
     st.selectbox(
-        "隱形控制核心", 
+        "📅 統計區間選擇", 
         options=historical_periods_list, 
         index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, 
         label_visibility="collapsed", 
@@ -355,7 +350,7 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     b113_val = k3_d.get('b113', '104,541,785')
     b114_val = k3_d.get('b114', '82,390,693')
     
-    # ✅ 強制寫死 115年/17期 為最新預算數字
+    # ✅ 強制寫死 115年/17期 為最新預算數字，排除舊 JSON 影響
     b115_val = '113,381,500'
 
     # 自動加總總預算
@@ -364,7 +359,7 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     
     exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
-    # 排版與卡片渲染 (K4 已拔除 2026)
+    # 卡片渲染區塊 (K4 已拔除 2026 預警)
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
     with k1: st.markdown(f'<div class="unified-card k1-card"><div class="card-section-top"><span class="card-label">累積會員總數</span><div class="hero-val-wrapper"><span class="hero-value">{t_users_str}</span><span class="unit">人</span></div><div class="growth-tag">▲ 本週新增 +{w_users_str} 人</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">推播統計</span><div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div><div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div></div></div>', unsafe_allow_html=True)
     with k2: st.markdown(f'<div class="unified-card k2-card"><div class="card-section-top"><span class="card-label">當週指標</span><div class="app-list-item" style="margin-top: 8px;">✨ 當週發放：<span class="data-bold">{w_issued_str}</span> 枚</div><div class="app-list-item">🎁 當週兌換：<span class="data-bold">{w_redeemed_str}</span> 枚</div><div class="app-list-item">💲 消費店家：<span class="data-bold">{active_stores_str}</span> 家</div><div class="app-list-item">🏪 總特約店：<span class="data-bold">{total_stores_str}</span> 家</div><div class="app-list-item">📈 新增店家：<span class="data-bold">+{new_stores_str}</span> 家</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">臺東金幣總發放數</span><div class="hero-val-wrapper"><span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span></div><div class="section-note-bottom">累積自 110/01/01 起算</div></div></div>', unsafe_allow_html=True)
