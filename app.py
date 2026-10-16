@@ -304,7 +304,8 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
 
     def parse_budget(val): return int(str(val).replace(',', '').strip() or 0)
     total_budget_str = f"{parse_budget(b110_val)+parse_budget(b111_val)+parse_budget(b112_val)+parse_budget(b113_val)+parse_budget(b114_val)+parse_budget(b115_val):,}"
-
+    
+    exp26_str = f"{int(k4_d.get('expire_20260930_coins', 0)):,}"
     exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
