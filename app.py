@@ -290,14 +290,39 @@ with st.sidebar:
 # ==========================================
 # 4. 📺 主畫面渲染 - 戰情首頁
 # ==========================================
+# ==========================================
+# 4. 📺 主畫面渲染 - 戰情首頁
+# ==========================================
 if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # 復原您原本設計的精美膠囊按鈕與隱藏選單 CSS
-    st.markdown("""<style>section[data-testid="stMain"] div[data-testid="stSelectbox"] { margin-top: -60px !important; opacity: 0 !important; z-index: 999 !important; cursor: pointer !important; }</style>""", unsafe_allow_html=True)
-    st.markdown(f"""<div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px; position: relative;"><div class="morandi-static-capsule">{st.session_state.selected_period}</div></div>""", unsafe_allow_html=True)
+    # --- 全新疊加邏輯：透明選單在底層接收點擊，視覺膠囊在頂層顯示 ---
+    st.markdown("""
+    <style>
+    /* 1. 隱藏原生選單外觀，但保留它的點擊熱區 */
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+        opacity: 0 !important;
+        cursor: pointer !important;
+    }
+    /* 2. 膠囊往上拉疊加在選單上，並設定穿透點擊 (pointer-events: none) */
+    .overlay-capsule-container {
+        margin-top: -50px !important; 
+        margin-bottom: 25px !important;
+        pointer-events: none !important; /* 🌟 關鍵魔法：讓點擊直接穿透給底下的選單 */
+        position: relative;
+        z-index: 10;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # 1. 建立真實的下拉選單 (目前外觀已透明，在底層)
     st.selectbox("隱形控制核心", options=historical_periods_list, index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, label_visibility="collapsed", key="capsule_hidden_key", on_change=on_hidden_capsule_change)
     
+    # 2. 建立視覺膠囊，直接覆蓋在選單上方 (頂層顯示，點擊穿透)
+    st.markdown(f"""<div class="overlay-capsule-container"><div class="morandi-static-capsule">{st.session_state.selected_period}</div></div>""", unsafe_allow_html=True)
+    
+    # ==========================================
+    # 讀取並渲染 KPI 資料
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
@@ -325,10 +350,8 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     def parse_budget(val): return int(str(val).replace(',', '').strip() or 0)
     total_budget_str = f"{parse_budget(b110_val)+parse_budget(b111_val)+parse_budget(b112_val)+parse_budget(b113_val)+parse_budget(b114_val)+parse_budget(b115_val):,}"
     
-    exp26_str = f"{int(k4_d.get('expire_20260930_coins', 0)):,}"
     exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
-    # 移除了重複宣告的 columns，確保排版穩定
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
     with k1: st.markdown(f'<div class="unified-card k1-card"><div class="card-section-top"><span class="card-label">累積會員總數</span><div class="hero-val-wrapper"><span class="hero-value">{t_users_str}</span><span class="unit">人</span></div><div class="growth-tag">▲ 本週新增 +{w_users_str} 人</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">推播統計</span><div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div><div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div></div></div>', unsafe_allow_html=True)
     with k2: st.markdown(f'<div class="unified-card k2-card"><div class="card-section-top"><span class="card-label">當週指標</span><div class="app-list-item" style="margin-top: 8px;">✨ 當週發放：<span class="data-bold">{w_issued_str}</span> 枚</div><div class="app-list-item">🎁 當週兌換：<span class="data-bold">{w_redeemed_str}</span> 枚</div><div class="app-list-item">💲 消費店家：<span class="data-bold">{active_stores_str}</span> 家</div><div class="app-list-item">🏪 總特約店：<span class="data-bold">{total_stores_str}</span> 家</div><div class="app-list-item">📈 新增店家：<span class="data-bold">+{new_stores_str}</span> 家</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">臺東金幣總發放數</span><div class="hero-val-wrapper"><span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span></div><div class="section-note-bottom">累積自 110/01/01 起算</div></div></div>', unsafe_allow_html=True)
