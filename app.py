@@ -287,23 +287,16 @@ with st.sidebar:
 # ==========================================
 # 4. 📺 主畫面渲染 - 戰情首頁
 # ==========================================
+# ==========================================
+# 4. 📺 主畫面渲染 - 戰情首頁
+# ==========================================
 if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
     
-    # 1. 加入換行保持上方距離，不再使用任何容易跑版的 CSS 疊加技巧
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # 2. 回歸最穩定、絕對不會跑版的原生下拉選單
-    st.selectbox(
-        "📅 選擇統計區間：", 
-        options=historical_periods_list, 
-        index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, 
-        key="capsule_hidden_key", 
-        on_change=on_hidden_capsule_change
-    )
-    
-    # 3. 加上一條細細的分隔線，讓畫面更有層次感
-    st.markdown("<hr style='margin-top: 5px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+    # 復原您原本設計的精美膠囊按鈕與隱藏選單 CSS
+    st.markdown("""<style>section[data-testid="stMain"] div[data-testid="stSelectbox"] { margin-top: -60px !important; opacity: 0 !important; z-index: 999 !important; cursor: pointer !important; }</style>""", unsafe_allow_html=True)
+    st.markdown(f"""<div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px; position: relative;"><div class="morandi-static-capsule">{st.session_state.selected_period}</div></div>""", unsafe_allow_html=True)
+    st.selectbox("隱形控制核心", options=historical_periods_list, index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, label_visibility="collapsed", key="capsule_hidden_key", on_change=on_hidden_capsule_change)
     
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
@@ -327,7 +320,7 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     b112_val = k3_d.get('b112','66,302,010')
     b113_val = k3_d.get('b113','104,541,785')
     b114_val = k3_d.get('b114','82,390,693')
-    b115_val = k3_d.get('b115','116,465,940')
+    b115_val = k3_d.get('b115','113,381,500')
 
     def parse_budget(val): return int(str(val).replace(',', '').strip() or 0)
     total_budget_str = f"{parse_budget(b110_val)+parse_budget(b111_val)+parse_budget(b112_val)+parse_budget(b113_val)+parse_budget(b114_val)+parse_budget(b115_val):,}"
@@ -335,6 +328,7 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     exp26_str = f"{int(k4_d.get('expire_20260930_coins', 0)):,}"
     exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
+    # 移除了重複宣告的 columns，確保排版穩定
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
     with k1: st.markdown(f'<div class="unified-card k1-card"><div class="card-section-top"><span class="card-label">累積會員總數</span><div class="hero-val-wrapper"><span class="hero-value">{t_users_str}</span><span class="unit">人</span></div><div class="growth-tag">▲ 本週新增 +{w_users_str} 人</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">推播統計</span><div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div><div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div></div></div>', unsafe_allow_html=True)
     with k2: st.markdown(f'<div class="unified-card k2-card"><div class="card-section-top"><span class="card-label">當週指標</span><div class="app-list-item" style="margin-top: 8px;">✨ 當週發放：<span class="data-bold">{w_issued_str}</span> 枚</div><div class="app-list-item">🎁 當週兌換：<span class="data-bold">{w_redeemed_str}</span> 枚</div><div class="app-list-item">💲 消費店家：<span class="data-bold">{active_stores_str}</span> 家</div><div class="app-list-item">🏪 總特約店：<span class="data-bold">{total_stores_str}</span> 家</div><div class="app-list-item">📈 新增店家：<span class="data-bold">+{new_stores_str}</span> 家</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">臺東金幣總發放數</span><div class="hero-val-wrapper"><span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span></div><div class="section-note-bottom">累積自 110/01/01 起算</div></div></div>', unsafe_allow_html=True)
