@@ -289,14 +289,28 @@ with st.sidebar:
 # ==========================================
 if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     st.markdown('<div class="fixed-title">TTPush 週營運資料統計分析</div>', unsafe_allow_html=True)
-    st.markdown("""<style>section[data-testid="stMain"] div[data-testid="stSelectbox"] { margin-top: -60px !important; opacity: 0 !important; z-index: 999 !important; cursor: pointer !important; }</style>""", unsafe_allow_html=True)
-    st.markdown(f"""<div class="capsule-visual-container" style="margin-top: 15px; margin-bottom: 5px; position: relative;"><div class="morandi-static-capsule">{st.session_state.selected_period}</div></div>""", unsafe_allow_html=True)
-    st.selectbox("隱形控制核心", options=historical_periods_list, index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, label_visibility="collapsed", key="capsule_hidden_key", on_change=on_hidden_capsule_change)
+    
+    # 1. 加入換行保持上方距離，不再使用任何容易跑版的 CSS 疊加技巧
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # 2. 回歸最穩定、絕對不會跑版的原生下拉選單
+    st.selectbox(
+        "📅 選擇統計區間：", 
+        options=historical_periods_list, 
+        index=historical_periods_list.index(st.session_state.selected_period) if st.session_state.selected_period in historical_periods_list else 0, 
+        key="capsule_hidden_key", 
+        on_change=on_hidden_capsule_change
+    )
+    
+    # 3. 加上一條細細的分隔線，讓畫面更有層次感
+    st.markdown("<hr style='margin-top: 5px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+    
     current_data = DATA_ENGINE.get(st.session_state.selected_period, {})
     k1_d = current_data.get("k1_metrics", {})
     k2_d = current_data.get("k2_metrics", {})
     k3_d = current_data.get("k3_metrics", {"b110": "176,839,060", "b111": "67,113,280", "b112": "66,302,010", "b113": "104,541,785", "b114": "82,390,693", "b115": "113,381,500"})
     k4_d = current_data.get("k4_metrics", {})
+
     t_users_str = f"{int(k1_d.get('actual_total_users', 0)):,}"
     w_users_str = f"{int(k1_d.get('derived_weekly_new_users', 0)):,}"
     t_push_str = f"{int(k1_d.get('total_push_accumulated', 0)):,}"
@@ -322,12 +336,10 @@ if nav_tab == "👀 戰情首頁" or nav_tab == "🔄 週報維護":
     exp27_str = f"{int(k4_d.get('expire_20270930_coins', 0)):,}"
 
     k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
-    k1, k2, k3, k4 = st.columns([0.9, 1, 1.2, 1.2])
     with k1: st.markdown(f'<div class="unified-card k1-card"><div class="card-section-top"><span class="card-label">累積會員總數</span><div class="hero-val-wrapper"><span class="hero-value">{t_users_str}</span><span class="unit">人</span></div><div class="growth-tag">▲ 本週新增 +{w_users_str} 人</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">推播統計</span><div class="app-list-item">📣 累計：<span class="data-bold">{t_push_str}</span> 則</div><div class="app-list-item">🚀 本週：<span class="data-bold">{w_push_str}</span> 則</div></div></div>', unsafe_allow_html=True)
     with k2: st.markdown(f'<div class="unified-card k2-card"><div class="card-section-top"><span class="card-label">當週指標</span><div class="app-list-item" style="margin-top: 8px;">✨ 當週發放：<span class="data-bold">{w_issued_str}</span> 枚</div><div class="app-list-item">🎁 當週兌換：<span class="data-bold">{w_redeemed_str}</span> 枚</div><div class="app-list-item">💲 消費店家：<span class="data-bold">{active_stores_str}</span> 家</div><div class="app-list-item">🏪 總特約店：<span class="data-bold">{total_stores_str}</span> 家</div><div class="app-list-item">📈 新增店家：<span class="data-bold">+{new_stores_str}</span> 家</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">臺東金幣總發放數</span><div class="hero-val-wrapper"><span class="long-value" style="font-size: 1.8rem; font-weight: 800; line-height: 1.1;">{t_coins_str}</span><span class="unit">枚</span></div><div class="section-note-bottom">累積自 110/01/01 起算</div></div></div>', unsafe_allow_html=True)
     with k3: st.markdown(f'<div class="unified-card k3-card"><div class="card-section-top"><span class="card-label">臺東金幣總預算數</span><div class="hero-val-wrapper"><span class="hero-value">{total_budget_str}</span><span class="unit">枚</span></div><div class="section-note-top-k3">累計 110至115年度預算(11-17期)</div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">📅 歷年預算明細</span><div class="budget-grid"><div class="budget-item"><span class="b-year">110年/11+12期</span><span class="val">{b110_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">111年/13期</span><span class="val">{b111_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">112年/14期</span><span class="val">{b112_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">113年/15期</span><span class="val">{b113_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">114年/16期</span><span class="val">{b114_val}</span><span class="b-unit">枚</span></div><div class="budget-item"><span class="b-year">115年/17期</span><span class="val">{b115_val}</span><span class="b-unit">枚</span></div></div></div></div>', unsafe_allow_html=True)
     with k4: st.markdown(f'<div class="unified-card k4-card"><div class="card-section-top"><span class="card-label">⚠️ 金幣到期預警</span><div class="expire-list-container"><div class="expire-row"><span class="expire-date">2027/09/30 到期</span><div class="expire-val-wrapper"><span class="expire-number">{exp27_str}</span><span class="expire-unit">枚</span></div></div></div></div><div class="divider-line-center"></div><div class="card-section-bottom"><span class="card-label">📢 營運備註整理</span><ul class="ops-notes"><li><span class="note-tag">維護</span>114/06/04 因 4.0 上線系統關閉維護</li><li><span class="note-tag">封測</span>114/06/23-27 進行 4.0 核心封測</li><li><span class="note-tag">推播</span>113/09/25-11/06 暫停金幣推播</li><li><span class="note-tag">對象</span>推播含所有用戶及縣民群組</li><li><span class="note-tag">基準</span>金幣統計自 110/01/01 起算</li></ul></div></div>', unsafe_allow_html=True)
-
 # ==========================================
 # 5. 💰 預算管理模組 (三層式架構 CRUD 核心)
 # ==========================================
