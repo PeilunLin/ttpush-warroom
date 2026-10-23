@@ -204,7 +204,7 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("### 🛠️ 步驟二：審核與同步")
         with st.expander("⚙️ 進階：手動數據微調與雲端同步", expanded=False):
-            cur_data = DATA_ENGINE.get(st.session_state.selected_selected_period if "selected_period" in st.session_state else st.session_state.selected_period, {})
+            cur_data = DATA_ENGINE.get(st.session_state.selected_period, {})
             cur_k1 = cur_data.get("k1_metrics", {})
             cur_k2 = cur_data.get("k2_metrics", {})
             cur_k3 = cur_data.get("k3_metrics", {}) # ✅ 新增取得 k3_metrics
