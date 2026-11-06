@@ -1230,5 +1230,33 @@
             "expire_20260930_coins": 0,
             "expire_20270930_coins": 39424672
         }
+    },
+    "統計區間：115/10/30 — 115/11/05": {
+        "k1_metrics": {
+            "actual_total_users": 150421,
+            "derived_weekly_new_users": 156,
+            "total_push_accumulated": 6855,
+            "weekly_push_current": 24
+        },
+        "k2_metrics": {
+            "weekly_coins_issued": 2767470,
+            "weekly_coins_redeemed_audited": 1119870,
+            "active_stores_count": 119,
+            "new_stores_adjusted": 9,
+            "total_accumulated_coins": 411613123,
+            "total_stores_accumulated": 710
+        },
+        "k3_metrics": {
+            "b110": "176,839,060",
+            "b111": "67,113,280",
+            "b112": "66,302,010",
+            "b113": "104,541,785",
+            "b114": "82,390,693",
+            "b115": "117,059,540"
+        },
+        "k4_metrics": {
+            "expire_20260930_coins": 0,
+            "expire_20270930_coins": 40914652
+        }
     }
 }
